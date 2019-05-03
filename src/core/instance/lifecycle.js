@@ -29,15 +29,21 @@ export function setActiveInstance(vm: Component) {
   }
 }
 
+// 主要是构建父子组件的关系和初始化一些变量
 export function initLifecycle (vm: Component) {
   const options = vm.$options
 
   // locate first non-abstract parent
+
+  // keep-alive / transition 之类组件的absolute 为 true，
+  // 这些组件并不能成为父组件，被当成虚拟组件使用。
   let parent = options.parent
   if (parent && !options.abstract) {
+    // 一直寻找abstract不为true的组件，也就是真实组件
     while (parent.$options.abstract && parent.$parent) {
       parent = parent.$parent
     }
+    // 父组件添加当前组件， 构建父子组件关系。
     parent.$children.push(vm)
   }
 
@@ -55,6 +61,8 @@ export function initLifecycle (vm: Component) {
   vm._isBeingDestroyed = false
 }
 
+
+// 定义了组件更新的逻辑
 export function lifecycleMixin (Vue: Class<Component>) {
   Vue.prototype._update = function (vnode: VNode, hydrating?: boolean) {
     const vm: Component = this
@@ -333,6 +341,7 @@ export function deactivateChildComponent (vm: Component, direct?: boolean) {
   }
 }
 
+// 循环调用对应的钩子函数
 export function callHook (vm: Component, hook: string) {
   // #7573 disable dep collection when invoking lifecycle hooks
   pushTarget()

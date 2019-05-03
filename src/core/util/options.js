@@ -143,10 +143,14 @@ strats.data = function (
 /**
  * Hooks and props are merged as arrays.
  */
+
+ // 对钩子函数进行合并的方法
 function mergeHook (
   parentVal: ?Array<Function>,
   childVal: ?Function | ?Array<Function>
 ): ?Array<Function> {
+  // 钩子函数最终都将转换为数组形式
+  // Vue可以添加Mixin方法，所以同一钩子函数可能不止一个
   const res = childVal
     ? parentVal
       ? parentVal.concat(childVal)
@@ -162,6 +166,7 @@ function mergeHook (
 function dedupeHooks (hooks) {
   const res = []
   for (let i = 0; i < hooks.length; i++) {
+    // 相同功能的钩子只添加一个
     if (res.indexOf(hooks[i]) === -1) {
       res.push(hooks[i])
     }
@@ -169,6 +174,7 @@ function dedupeHooks (hooks) {
   return res
 }
 
+// 为所有的钩子函数都执行 mergeHook 方法
 LIFECYCLE_HOOKS.forEach(hook => {
   strats[hook] = mergeHook
 })
@@ -180,6 +186,7 @@ LIFECYCLE_HOOKS.forEach(hook => {
  * a three-way merge between constructor options, instance
  * options and parent options.
  */
+// 通过 for in 将childVal添加到res上
 function mergeAssets (
   parentVal: ?Object,
   childVal: ?Object,
@@ -195,6 +202,7 @@ function mergeAssets (
   }
 }
 
+// 对于Component, filter, directives 使用 mergeAssets
 ASSET_TYPES.forEach(function (type) {
   strats[type + 's'] = mergeAssets
 })
@@ -295,26 +303,39 @@ export function validateComponentName (name: string) {
  * Ensure all props option syntax are normalized into the
  * Object-based format.
  */
+
+ // 将 props 进行规范统一的格式  
 function normalizeProps (options: Object, vm: ?Component) {
+  // options.props 为组件实例的 props 属性
   const props = options.props
   if (!props) return
   const res = {}
   let i, val, name
+  // props 可以是 数组(['propA', 'propB']) 和对象{propA: String, propB: { type: String, default: '22'}} 等
+
+  // props 为数组时只能是 String 类型，
+  // 将 props 的每一项进行驼峰命名（html不区分大小写，所以props可能为 props-name 
+  // 这种格式， 需要转换为 propsName 形式，以符合网页中的行为）
   if (Array.isArray(props)) {
     i = props.length
     while (i--) {
       val = props[i]
       if (typeof val === 'string') {
+        // 将name进行驼峰命名，并缓存name
         name = camelize(val)
         res[name] = { type: null }
       } else if (process.env.NODE_ENV !== 'production') {
         warn('props must be strings when using array syntax.')
       }
     }
+
+    // 调用 Object.property.toString.call 来判断 props 是不是一个纯粹的对象
   } else if (isPlainObject(props)) {
     for (const key in props) {
       val = props[key]
       name = camelize(key)
+      // 对象格式的props必定会有 type 属性，对象的格式通常为 { type: String, default: '22'}} 
+      // 非对象通常为 String 或 [String, Number] 这种，要统一成统一格式
       res[name] = isPlainObject(val)
         ? val
         : { type: val }
@@ -359,6 +380,8 @@ function normalizeInject (options: Object, vm: ?Component) {
 /**
  * Normalize raw function directives into object format.
  */
+
+ // 自定义zhi'l只能是函数类型，默认有bind，update两种钩子函数
 function normalizeDirectives (options: Object) {
   const dirs = options.directives
   if (dirs) {
@@ -397,7 +420,7 @@ export function mergeOptions (
   if (typeof child === 'function') {
     child = child.options
   }
-
+  // 将props， inject，directives 统一成对应的格式
   normalizeProps(child, vm)
   normalizeInject(child, vm)
   normalizeDirectives(child)
@@ -423,11 +446,13 @@ export function mergeOptions (
     mergeField(key)
   }
   for (key in child) {
+    // 防止对同一属性进行重复合并
     if (!hasOwn(parent, key)) {
       mergeField(key)
     }
   }
   function mergeField (key) {
+    // 对于不同的key有不同的合并策略，其他没有定义的就使用defaultStrat
     const strat = strats[key] || defaultStrat
     options[key] = strat(parent[key], child[key], vm, key)
   }

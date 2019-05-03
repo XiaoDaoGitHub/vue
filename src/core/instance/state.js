@@ -45,6 +45,7 @@ export function proxy (target: Object, sourceKey: string, key: string) {
   Object.defineProperty(target, key, sharedPropertyDefinition)
 }
 
+// 对方法，属性，数据等进行一个映射，可以直接this.xxx获取
 export function initState (vm: Component) {
   vm._watchers = []
   const opts = vm.$options
@@ -316,10 +317,17 @@ function createWatcher (
   return vm.$watch(expOrFn, handler, options)
 }
 
+
+
+// 给Vue原型上挂在$data,$props以及 $watch 方法
 export function stateMixin (Vue: Class<Component>) {
   // flow somehow has problems with directly declared definition object
   // when using Object.defineProperty, so we have to procedurally build up
   // the object here.
+
+  // 防止我们对 _data 进行修改，通过定义 $data 的 get 函数
+  // 我们只对外暴露 $data, 并且 $data 没有 set 函数
+  // 我们无法对 $data 进行重新赋值，在一定程度上保护了 _data 的安全
   const dataDef = {}
   dataDef.get = function () { return this._data }
   const propsDef = {}
@@ -336,6 +344,8 @@ export function stateMixin (Vue: Class<Component>) {
       warn(`$props is readonly.`, this)
     }
   }
+
+  // 对 _data 和 _props 做一个映射， 通过Object.defineProperty定义后，this.$data 相当于访问 this._data
   Object.defineProperty(Vue.prototype, '$data', dataDef)
   Object.defineProperty(Vue.prototype, '$props', propsDef)
 

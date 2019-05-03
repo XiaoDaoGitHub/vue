@@ -25,17 +25,25 @@ export function validateProp (
   vm?: Component
 ): any {
   const prop = propOptions[key]
+
+  // 组件没有传入该属性，absent 为 true
   const absent = !hasOwn(propsData, key)
   let value = propsData[key]
   // boolean casting
+  // prop 是否含有bool值，
   const booleanIndex = getTypeIndex(Boolean, prop.type)
   if (booleanIndex > -1) {
+    // 组件没有传，且没有定义default值，value 定义为 false
     if (absent && !hasOwn(prop, 'default')) {
       value = false
+
+      // huphenate 用于转换驼峰为 - 命名
     } else if (value === '' || value === hyphenate(key)) {
       // only cast empty string / same name to boolean if
       // boolean has higher priority
+      
       const stringIndex = getTypeIndex(String, prop.type)
+      // props的type不为String类型 或者 Boolean定义在String前面
       if (stringIndex < 0 || booleanIndex < stringIndex) {
         value = true
       }
@@ -179,6 +187,8 @@ function assertType (value: any, type: Function): {
  * because a simple equality check will fail when running
  * across different vms / iframes.
  */
+
+ // Number, Array等这些类型为函数，通过match[1]可以拿到函数体，进而可以判断是否相等
 function getType (fn) {
   const match = fn && fn.toString().match(/^\s*function (\w+)/)
   return match ? match[1] : ''
@@ -188,10 +198,12 @@ function isSameType (a, b) {
   return getType(a) === getType(b)
 }
 
+// 判断prop的类型是否匹配
 function getTypeIndex (type, expectedTypes): number {
   if (!Array.isArray(expectedTypes)) {
     return isSameType(expectedTypes, type) ? 0 : -1
   }
+  // 数组循环判断，一项成立即可
   for (let i = 0, len = expectedTypes.length; i < len; i++) {
     if (isSameType(expectedTypes[i], type)) {
       return i

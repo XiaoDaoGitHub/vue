@@ -49,6 +49,8 @@ export function updateComponentListeners (
   target = undefined
 }
 
+
+// 定义事件发射器
 export function eventsMixin (Vue: Class<Component>) {
   const hookRE = /^hook:/
   Vue.prototype.$on = function (event: string | Array<string>, fn: Function): Component {

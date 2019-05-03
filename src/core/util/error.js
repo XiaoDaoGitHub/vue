@@ -33,6 +33,8 @@ export function handleError (err: Error, vm: any, info: string) {
   }
 }
 
+
+// 对context调用handler函数，并处理async函数情况
 export function invokeWithErrorHandling (
   handler: Function,
   context: any,
@@ -43,6 +45,7 @@ export function invokeWithErrorHandling (
   let res
   try {
     res = args ? handler.apply(context, args) : handler.call(context)
+    // async 函数会返回Promise对象 
     if (res && !res._isVue && isPromise(res) && !res._handled) {
       res.catch(e => handleError(e, vm, info + ` (Promise/async)`))
       // issue #9511

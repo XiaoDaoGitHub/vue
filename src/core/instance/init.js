@@ -12,10 +12,12 @@ import { extend, mergeOptions, formatComponentName } from '../util/index'
 
 let uid = 0
 
+// 添加 _init 方法，New Vue 和 组件初始化都会来到这里
 export function initMixin (Vue: Class<Component>) {
   Vue.prototype._init = function (options?: Object) {
     const vm: Component = this
     // a uid
+    // 通过自增的uid，我们可以给每个组件实例一个唯一的 _uid 作为标识
     vm._uid = uid++
 
     let startTag, endTag
@@ -29,12 +31,14 @@ export function initMixin (Vue: Class<Component>) {
     // a flag to avoid this being observed
     vm._isVue = true
     // merge options
+    // 组件节点会添加一个 _isComponent = true 
     if (options && options._isComponent) {
       // optimize internal component instantiation
       // since dynamic options merging is pretty slow, and none of the
       // internal component options needs special treatment.
       initInternalComponent(vm, options)
     } else {
+      // 将options和原有的options进行合并
       vm.$options = mergeOptions(
         resolveConstructorOptions(vm.constructor),
         options || {},
@@ -54,6 +58,8 @@ export function initMixin (Vue: Class<Component>) {
     initRender(vm)
     callHook(vm, 'beforeCreate')
     initInjections(vm) // resolve injections before data/props
+    // 因为props/data是在creatd之前beforeCreated之后调用的，
+    // 所以created才能拿到数据
     initState(vm)
     initProvide(vm) // resolve provide after data/props
     callHook(vm, 'created')

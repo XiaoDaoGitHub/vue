@@ -176,6 +176,9 @@ export const capitalize = cached((str: string): string => {
 /**
  * Hyphenate a camelCase string.
  */
+
+ // \B 为非单词边界 如 /\Bend/ 匹配 /send/ 不匹配 /ad end/
+ // 这个正则将驼峰命名转换为 - 分割的命名
 const hyphenateRE = /\B([A-Z])/g
 export const hyphenate = cached((str: string): string => {
   return str.replace(hyphenateRE, '-$1').toLowerCase()
