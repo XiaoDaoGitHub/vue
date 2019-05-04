@@ -157,10 +157,13 @@ function initData (vm: Component) {
         vm
       )
     } else if (!isReserved(key)) {
+
+      // 和props一样，对this.xxx 会映射到 this._data 上
       proxy(vm, `_data`, key)
     }
   }
   // observe data
+  // 将data的每一个数据都通过Object.defineProperty定义一遍
   observe(data, true /* asRootData */)
 }
 
