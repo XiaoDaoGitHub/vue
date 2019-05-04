@@ -32,6 +32,9 @@ export function validateProp (
   // boolean casting
   // prop 是否含有bool值，
   const booleanIndex = getTypeIndex(Boolean, prop.type)
+
+  // 这里主要判断是否存在boolean值的情况
+  // 分为定义了default属性，和定义了String类型的情况如 [Boolean, String];
   if (booleanIndex > -1) {
     // 组件没有传，且没有定义default值，value 定义为 false
     if (absent && !hasOwn(prop, 'default')) {
@@ -49,12 +52,17 @@ export function validateProp (
       }
     }
   }
+
   // check default value
   if (value === undefined) {
+    // 获取Default的值
     value = getPropDefaultValue(vm, prop, key)
     // since the default value is a fresh copy,
     // make sure to observe it.
+    // 保存当前的shouldObserve值，将prop变成Observer（观察者）对象
+    // 然后再恢复之前的状态
     const prevShouldObserve = shouldObserve
+
     toggleObserving(true)
     observe(value)
     toggleObserving(prevShouldObserve)
@@ -79,6 +87,8 @@ function getPropDefaultValue (vm: ?Component, prop: PropOptions, key: string): a
   }
   const def = prop.default
   // warn against non-factory defaults for Object & Array
+  // default如果是对象的话必须作为函数的返回值
+  // 在js中对象是引用类型，防止多个组件使用了同一个对象的引用，相互造成干扰
   if (process.env.NODE_ENV !== 'production' && isObject(def)) {
     warn(
       'Invalid default value for prop "' + key + '": ' +
@@ -89,6 +99,7 @@ function getPropDefaultValue (vm: ?Component, prop: PropOptions, key: string): a
   }
   // the raw prop value was also undefined from previous render,
   // return previous default value to avoid unnecessary watcher trigger
+  // 没有传入对于的propData值，但上一次有，返回上一次的值
   if (vm && vm.$options.propsData &&
     vm.$options.propsData[key] === undefined &&
     vm._props[key] !== undefined
@@ -97,6 +108,7 @@ function getPropDefaultValue (vm: ?Component, prop: PropOptions, key: string): a
   }
   // call factory function for non-Function types
   // a value is Function if its prototype is function even across different execution context
+  // type 不是Function类型，调用该函数，返回返回值
   return typeof def === 'function' && getType(prop.type) !== 'Function'
     ? def.call(vm)
     : def

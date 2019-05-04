@@ -62,6 +62,8 @@ export function initState (vm: Component) {
   }
 }
 
+// 将属性定义到this._props 里面，通过this.xxx映射到this._props[xxx]
+// 来取得相对应的值
 function initProps (vm: Component, propsOptions: Object) {
   const propsData = vm.$options.propsData || {}
   const props = vm._props = {}
@@ -73,12 +75,15 @@ function initProps (vm: Component, propsOptions: Object) {
   if (!isRoot) {
     toggleObserving(false)
   }
+
+  // 一次对每一个定义的prop做检查，包括类型，值
   for (const key in propsOptions) {
     keys.push(key)
     const value = validateProp(key, propsOptions, propsData, vm)
     /* istanbul ignore else */
     if (process.env.NODE_ENV !== 'production') {
       const hyphenatedKey = hyphenate(key)
+      // 检查属性名称是不是保留名字如(key,ref,slot,slot-scope,is)
       if (isReservedAttribute(hyphenatedKey) ||
           config.isReservedAttr(hyphenatedKey)) {
         warn(
@@ -98,12 +103,15 @@ function initProps (vm: Component, propsOptions: Object) {
         }
       })
     } else {
+      // 将传入的属性定义为响应式到_prop上面
       defineReactive(props, key, value)
     }
     // static props are already proxied on the component's prototype
     // during Vue.extend(). We only need to proxy props defined at
     // instantiation here.
+    // props不能重复定义
     if (!(key in vm)) {
+      // 通过this访问会映射到访问this._props上面，防止我们直接修改内部属性
       proxy(vm, `_props`, key)
     }
   }
@@ -112,6 +120,8 @@ function initProps (vm: Component, propsOptions: Object) {
 
 function initData (vm: Component) {
   let data = vm.$options.data
+  // 获取到data的值，组件内部一般推荐data
+  // 为函数，函数的返回值为定义的值
   data = vm._data = typeof data === 'function'
     ? getData(data, vm)
     : data || {}
@@ -130,6 +140,8 @@ function initData (vm: Component) {
   let i = keys.length
   while (i--) {
     const key = keys[i]
+
+    /// data不能和props以及methods重复
     if (process.env.NODE_ENV !== 'production') {
       if (methods && hasOwn(methods, key)) {
         warn(
@@ -260,9 +272,12 @@ function createGetterInvoker(fn) {
   }
 }
 
+// 通过bind函数将方法this指向vm对象
 function initMethods (vm: Component, methods: Object) {
   const props = vm.$options.props
   for (const key in methods) {
+
+    // 方法名不能和prop名称重复
     if (process.env.NODE_ENV !== 'production') {
       if (typeof methods[key] !== 'function') {
         warn(
