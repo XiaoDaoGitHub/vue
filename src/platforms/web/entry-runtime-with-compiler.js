@@ -19,6 +19,8 @@ Vue.prototype.$mount = function (
   el?: string | Element,
   hydrating?: boolean
 ): Component {
+
+  // query 就是原生的querySelector 
   el = el && query(el)
 
   /* istanbul ignore if */
@@ -31,10 +33,13 @@ Vue.prototype.$mount = function (
 
   const options = this.$options
   // resolve template/el and convert to render function
+  // 没有定义 render 函数会尝试生成一个 render 函数
   if (!options.render) {
+    // 首先会看是否定义了 template
     let template = options.template
     if (template) {
       if (typeof template === 'string') {
+        // template是字符串，template是不是一个 Id 选择器
         if (template.charAt(0) === '#') {
           template = idToTemplate(template)
           /* istanbul ignore if */
@@ -45,15 +50,19 @@ Vue.prototype.$mount = function (
             )
           }
         }
+
+        // template如果是一个HTML节点，获取 template的innerHTML
       } else if (template.nodeType) {
         template = template.innerHTML
       } else {
+        // 不是字符串，也不是HTML节点，可能就是 template 定义有问题
         if (process.env.NODE_ENV !== 'production') {
           warn('invalid template option:' + template, this)
         }
         return this
       }
     } else if (el) {
+      // 定义了el，尝试获取outHMTL
       template = getOuterHTML(el)
     }
     if (template) {
@@ -61,7 +70,7 @@ Vue.prototype.$mount = function (
       if (process.env.NODE_ENV !== 'production' && config.performance && mark) {
         mark('compile')
       }
-
+      // 将模板解析为render函数 
       const { render, staticRenderFns } = compileToFunctions(template, {
         outputSourceRange: process.env.NODE_ENV !== 'production',
         shouldDecodeNewlines,
@@ -79,6 +88,8 @@ Vue.prototype.$mount = function (
       }
     }
   }
+  // 调用真正的mount方法
+  // 定义在 src\platforms\web\runtime\index.js 
   return mount.call(this, el, hydrating)
 }
 

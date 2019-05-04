@@ -442,6 +442,7 @@ export function mergeOptions (
 
   const options = {}
   let key
+  // 先 父后子，因为子可能覆盖父
   for (key in parent) {
     mergeField(key)
   }

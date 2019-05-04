@@ -172,6 +172,8 @@ export function mountComponent (
       }
     }
   }
+
+  // 调用beforeMount钩子，可以访问数据，但不能获取页面元素
   callHook(vm, 'beforeMount')
 
   let updateComponent
@@ -194,6 +196,8 @@ export function mountComponent (
       measure(`vue ${name} patch`, startTag, endTag)
     }
   } else {
+
+    // 渲染逻辑
     updateComponent = () => {
       vm._update(vm._render(), hydrating)
     }

@@ -90,6 +90,7 @@ export default class Watcher {
         )
       }
     }
+    // 普通组件会手动调用一次 get 函数
     this.value = this.lazy
       ? undefined
       : this.get()
@@ -99,10 +100,14 @@ export default class Watcher {
    * Evaluate the getter, and re-collect dependencies.
    */
   get () {
+    // 当前正在执行渲染的组件，通过pushTarget
+    // 后面每当触发data的get函数时候，可以通过target
+    // 获取到正在调用的对象，以便于添加到订阅者中去
     pushTarget(this)
     let value
     const vm = this.vm
     try {
+      
       value = this.getter.call(vm, vm)
     } catch (e) {
       if (this.user) {

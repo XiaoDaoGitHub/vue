@@ -71,6 +71,8 @@ export function initMixin (Vue: Class<Component>) {
       measure(`vue ${vm._name} init`, startTag, endTag)
     }
 
+    // 根元素才有 el
+    // $mount src\platforms\web\entry-runtime-with-compiler.js 下
     if (vm.$options.el) {
       vm.$mount(vm.$options.el)
     }
