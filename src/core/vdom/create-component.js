@@ -109,9 +109,12 @@ export function createComponent (
     return
   }
 
+  // baseCtor 就是 Vue
   const baseCtor = context.$options._base
 
   // plain options object: turn it into a constructor
+  // 调用Vue.extend把Ctor变成钩子函数 （定义在src\core\global-api\extend.js）
+  // 具备Vue的基本属性和方法
   if (isObject(Ctor)) {
     Ctor = baseCtor.extend(Ctor)
   }

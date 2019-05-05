@@ -25,6 +25,8 @@ const ALWAYS_NORMALIZE = 2
 
 // wrapper function for providing a more flexible interface
 // without getting yelled at by flow
+// 从_render进来，data children 没有，tag为传入的函数，
+// 可以时手写render函数，也可以时Vue-loader 编译生成的render函数
 export function createElement (
   context: Component,
   tag: any,
@@ -33,6 +35,7 @@ export function createElement (
   normalizationType: any,
   alwaysNormalize: boolean
 ): VNode | Array<VNode> {
+  //这里的 data 可以不传
   if (Array.isArray(data) || isPrimitive(data)) {
     normalizationType = children
     children = data
@@ -51,6 +54,8 @@ export function _createElement (
   children?: any,
   normalizationType?: number
 ): VNode | Array<VNode> {
+
+  // data不能是观察者对象
   if (isDef(data) && isDef((data: any).__ob__)) {
     process.env.NODE_ENV !== 'production' && warn(
       `Avoid using observed data object as vnode data: ${JSON.stringify(data)}\n` +
@@ -60,6 +65,8 @@ export function _createElement (
     return createEmptyVNode()
   }
   // object syntax in v-bind
+
+  // 可以在组件上面添加 is 属性
   if (isDef(data) && isDef(data.is)) {
     tag = data.is
   }
@@ -93,9 +100,13 @@ export function _createElement (
     children = simpleNormalizeChildren(children)
   }
   let vnode, ns
+
+  // 手写render函数
   if (typeof tag === 'string') {
     let Ctor
+    // 组件有没有命名空间
     ns = (context.$vnode && context.$vnode.ns) || config.getTagNamespace(tag)
+    // tag 是不是HTML标签
     if (config.isReservedTag(tag)) {
       // platform built-in elements
       if (process.env.NODE_ENV !== 'production' && isDef(data) && isDef(data.nativeOn)) {
@@ -104,10 +115,12 @@ export function _createElement (
           context
         )
       }
+      // html标签直接创建一个Vnode
       vnode = new VNode(
         config.parsePlatformTagName(tag), data, children,
         undefined, undefined, context
       )
+      // 是否是定义的组件标签名
     } else if ((!data || !data.pre) && isDef(Ctor = resolveAsset(context.$options, 'components', tag))) {
       // component
       vnode = createComponent(Ctor, data, context, children, tag)
@@ -115,6 +128,7 @@ export function _createElement (
       // unknown or unlisted namespaced elements
       // check at runtime because it may get assigned a namespace when its
       // parent normalizes children
+      // 不是html标签，也不是组件名称，创建一个vnode
       vnode = new VNode(
         tag, data, children,
         undefined, undefined, context

@@ -109,6 +109,7 @@ function initProps (vm: Component, propsOptions: Object) {
     // static props are already proxied on the component's prototype
     // during Vue.extend(). We only need to proxy props defined at
     // instantiation here.
+    // 这里是定义在组件实例上面，在Vue.extend中，创建组件构造函数会在原型上挂载
     // props不能重复定义
     if (!(key in vm)) {
       // 通过this访问会映射到访问this._props上面，防止我们直接修改内部属性
