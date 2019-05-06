@@ -8,7 +8,7 @@ import {
   hyphenate,
   formatComponentName
 } from 'core/util/index'
-
+  // 把data中传入的props提出出来
 export function extractPropsFromVNodeData (
   data: VNodeData,
   Ctor: Class<Component>,
@@ -17,13 +17,16 @@ export function extractPropsFromVNodeData (
   // we are only extracting raw values here.
   // validation and default values are handled in the child
   // component itself.
+  // 获取props的类型结构
   const propOptions = Ctor.options.props
   if (isUndef(propOptions)) {
     return
   }
   const res = {}
+
   const { attrs, props } = data
   if (isDef(attrs) || isDef(props)) {
+    // 循环获取添加到res中
     for (const key in propOptions) {
       const altKey = hyphenate(key)
       if (process.env.NODE_ENV !== 'production') {

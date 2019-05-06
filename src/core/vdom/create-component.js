@@ -130,6 +130,7 @@ export function createComponent (
 
   // async component
   let asyncFactory
+  // 异步组件后面再说
   if (isUndef(Ctor.cid)) {
     asyncFactory = Ctor
     Ctor = resolveAsyncComponent(asyncFactory, baseCtor)
@@ -151,28 +152,37 @@ export function createComponent (
 
   // resolve constructor options in case global mixins are applied after
   // component constructor creation
+  // 检查拆个那就Ctor后是否修改了options
   resolveConstructorOptions(Ctor)
 
   // transform component v-model data into props & events
+  // 是否定义了model选项
   if (isDef(data.model)) {
+    // 定义了v-model检测v-on是不是也定义了相同的触发事件
+    // 对事件进行合并
     transformModel(Ctor.options, data)
   }
 
   // extract props
+
+  // 把data中传入的props提出出来
   const propsData = extractPropsFromVNodeData(data, Ctor, tag)
 
   // functional component
+  // 是函数式组件
   if (isTrue(Ctor.options.functional)) {
     return createFunctionalComponent(Ctor, propsData, data, context, children)
   }
 
   // extract listeners, since these needs to be treated as
   // child component listeners instead of DOM listeners
+  // 将用native修饰的事件替换到data.on上面
   const listeners = data.on
   // replace with listeners with .native modifier
   // so it gets processed during parent component patch.
   data.on = data.nativeOn
 
+  // abstract是keep-alive，transition组件有的
   if (isTrue(Ctor.options.abstract)) {
     // abstract components do not keep anything
     // other than props & listeners & slot
@@ -186,10 +196,13 @@ export function createComponent (
   }
 
   // install component management hooks onto the placeholder node
+  // 把init, prepatch, insert这些钩子安装到data上
   installComponentHooks(data)
 
   // return a placeholder vnode
   const name = Ctor.options.name || tag
+  // 这里返回的只是一个占位符vnode，
+  // 实际调用的是Ctor这个构造函数
   const vnode = new VNode(
     `vue-component-${Ctor.cid}${name ? `-${name}` : ''}`,
     data, undefined, undefined, undefined, context,
@@ -226,12 +239,15 @@ export function createComponentInstanceForVnode (
   return new vnode.componentOptions.Ctor(options)
 }
 
+// 把init, prepatch, insert这些钩子安装到data上
 function installComponentHooks (data: VNodeData) {
   const hooks = data.hook || (data.hook = {})
   for (let i = 0; i < hooksToMerge.length; i++) {
     const key = hooksToMerge[i]
     const existing = hooks[key]
     const toMerge = componentVNodeHooks[key]
+    // data.hook上面的和要合并的不相等
+    // 或者 data.hook上不存在或者存在但没有_merged属性
     if (existing !== toMerge && !(existing && existing._merged)) {
       hooks[key] = existing ? mergeHook(toMerge, existing) : toMerge
     }
@@ -250,6 +266,7 @@ function mergeHook (f1: any, f2: any): Function {
 
 // transform component v-model info (value and callback) into
 // prop and event handler respectively.
+// 将v-on 和 v-model定义的函数进行合并到v-on上面
 function transformModel (options, data: any) {
   const prop = (options.model && options.model.prop) || 'value'
   const event = (options.model && options.model.event) || 'input'
@@ -257,6 +274,7 @@ function transformModel (options, data: any) {
   const on = data.on || (data.on = {})
   const existing = on[event]
   const callback = data.model.callback
+  // 是不是已经绑定了该事件
   if (isDef(existing)) {
     if (
       Array.isArray(existing)
