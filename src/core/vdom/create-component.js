@@ -35,6 +35,8 @@ import {
 // inline hooks to be invoked on component VNodes during patch
 const componentVNodeHooks = {
   init (vnode: VNodeWithData, hydrating: boolean): ?boolean {
+    // keep-alive组件会有componentInstance
+    // 应为组件并没有被销毁，第一次创建的时候也没有
     if (
       vnode.componentInstance &&
       !vnode.componentInstance._isDestroyed &&
@@ -85,6 +87,8 @@ const componentVNodeHooks = {
   },
 
   destroy (vnode: MountedComponentVNode) {
+    // compoentInstance 是由render函数生成的
+    // 不是keepAlive 组件的话执行实例的销毁函数
     const { componentInstance } = vnode
     if (!componentInstance._isDestroyed) {
       if (!vnode.data.keepAlive) {
@@ -225,17 +229,22 @@ export function createComponentInstanceForVnode (
   vnode: any, // we know it's MountedComponentVNode but flow doesn't
   parent: any, // activeInstance in lifecycle state
 ): Component {
+  // 注意：这里的option作为子组件的options传入
   const options: InternalComponentOptions = {
     _isComponent: true,
+    
     _parentVnode: vnode,
+    // parent 是当前的Vue实例
     parent
   }
   // check inline-template render functions
   const inlineTemplate = vnode.data.inlineTemplate
+  // 处理inline-template逻辑，替换render函数
   if (isDef(inlineTemplate)) {
     options.render = inlineTemplate.render
     options.staticRenderFns = inlineTemplate.staticRenderFns
   }
+  // 内部调用this._init(options) 依次来递归调用子组件
   return new vnode.componentOptions.Ctor(options)
 }
 

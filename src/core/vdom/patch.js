@@ -73,6 +73,8 @@ export function createPatchFunction (backend) {
 
   const { modules, nodeOps } = backend
 
+  // 将这些基础方法的相同类别的方法统一放至，
+  // 方便后面统一调用
   for (i = 0; i < hooks.length; ++i) {
     cbs[hooks[i]] = []
     for (j = 0; j < modules.length; ++j) {
@@ -348,9 +350,13 @@ export function createPatchFunction (backend) {
     let i, j
     const data = vnode.data
     if (isDef(data)) {
+      // 如果有src\core\vdom\create-component.js挂载的
+      // destroy函数，执行它
       if (isDef(i = data.hook) && isDef(i = i.destroy)) i(vnode)
       for (i = 0; i < cbs.destroy.length; ++i) cbs.destroy[i](vnode)
     }
+    // 递归调用子组件的destory方法
+    // 此时调用为由父到子调用
     if (isDef(i = vnode.children)) {
       for (j = 0; j < vnode.children.length; ++j) {
         invokeDestroyHook(vnode.children[j])
@@ -699,6 +705,8 @@ export function createPatchFunction (backend) {
 
   return function patch (oldVnode, vnode, hydrating, removeOnly) {
     if (isUndef(vnode)) {
+      // 没有新的vnode只有旧vnode，说明组件被销毁
+      // 调用组件及子组件的destroy钩子函数
       if (isDef(oldVnode)) invokeDestroyHook(oldVnode)
       return
     }
@@ -706,20 +714,26 @@ export function createPatchFunction (backend) {
     let isInitialPatch = false
     const insertedVnodeQueue = []
 
+    // 说明是子组件patch
     if (isUndef(oldVnode)) {
       // empty mount (likely as component), create new root element
       isInitialPatch = true
       createElm(vnode, insertedVnodeQueue)
     } else {
+      
       const isRealElement = isDef(oldVnode.nodeType)
+      // oldVode存在但不是html节点，并且和vnode是同一个
+      // vode，说明是更新组件节点
       if (!isRealElement && sameVnode(oldVnode, vnode)) {
         // patch existing root node
         patchVnode(oldVnode, vnode, insertedVnodeQueue, null, null, removeOnly)
       } else {
+        // 第一次进入vm.$el是一个真实元素节点
         if (isRealElement) {
           // mounting to a real element
           // check if this is server-rendered content and if we can perform
           // a successful hydration.
+          // 服务端渲染。。
           if (oldVnode.nodeType === 1 && oldVnode.hasAttribute(SSR_ATTR)) {
             oldVnode.removeAttribute(SSR_ATTR)
             hydrating = true
@@ -740,11 +754,14 @@ export function createPatchFunction (backend) {
           }
           // either not server-rendered, or hydration failed.
           // create an empty node and replace it
+          // 创建一个空的vnode，传入元素的基本属性（他跟Name，元素引用）
           oldVnode = emptyNodeAt(oldVnode)
         }
 
         // replacing existing element
+        // 对替换的节点引用
         const oldElm = oldVnode.elm
+        // 获取目标节点的parentNode
         const parentElm = nodeOps.parentNode(oldElm)
 
         // create new node

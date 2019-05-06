@@ -31,7 +31,7 @@ export function initMixin (Vue: Class<Component>) {
     // a flag to avoid this being observed
     vm._isVue = true
     // merge options
-    // 组件节点会添加一个 _isComponent = true 
+    // 调用子组件构造函数时，options中会添加一个 _isComponent = true 
     if (options && options._isComponent) {
       // optimize internal component instantiation
       // since dynamic options merging is pretty slow, and none of the
@@ -86,12 +86,14 @@ export function initInternalComponent (vm: Component, options: InternalComponent
   opts.parent = options.parent
   opts._parentVnode = parentVnode
 
+  // 获取占位符Vnode的值
   const vnodeComponentOptions = parentVnode.componentOptions
   opts.propsData = vnodeComponentOptions.propsData
   opts._parentListeners = vnodeComponentOptions.listeners
   opts._renderChildren = vnodeComponentOptions.children
   opts._componentTag = vnodeComponentOptions.tag
 
+  // 继承render函数
   if (options.render) {
     opts.render = options.render
     opts.staticRenderFns = options.staticRenderFns
