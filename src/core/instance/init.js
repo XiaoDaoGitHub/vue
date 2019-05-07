@@ -72,6 +72,7 @@ export function initMixin (Vue: Class<Component>) {
     }
 
     // 根元素才有 el
+    // 子组件执行的时候没有
     // $mount src\platforms\web\entry-runtime-with-compiler.js 下
     if (vm.$options.el) {
       vm.$mount(vm.$options.el)
