@@ -46,6 +46,7 @@ const componentVNodeHooks = {
       const mountedNode: any = vnode // work around flow
       componentVNodeHooks.prepatch(mountedNode, mountedNode)
     } else {
+      // 
       const child = vnode.componentInstance = createComponentInstanceForVnode(
         vnode,
         activeInstance
@@ -244,7 +245,7 @@ export function createComponentInstanceForVnode (
     options.render = inlineTemplate.render
     options.staticRenderFns = inlineTemplate.staticRenderFns
   }
-  // 内部调用this._init(options) 依次来递归调用子组件
+  //这个方法再Vue.extend中定义 内部调用this._init(options) 依次来递归调用子组件
   return new vnode.componentOptions.Ctor(options)
 }
 
