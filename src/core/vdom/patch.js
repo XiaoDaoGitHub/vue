@@ -73,7 +73,7 @@ export function createPatchFunction (backend) {
 
   const { modules, nodeOps } = backend
 
-  // 将这些基础方法的相同类别的方法统一放至，
+  // 将这些基础方法的相同类别的方法统一放至到相同数组中，
   // 方便后面统一调用
   for (i = 0; i < hooks.length; ++i) {
     cbs[hooks[i]] = []
@@ -143,6 +143,8 @@ export function createPatchFunction (backend) {
     }
 
     vnode.isRootInsert = !nested // for transition enter check
+    // 组件节点会进入这个方法，因为组件节点才具有 init（在创建vnode过程中添加的）钩子函数
+    // 像HTML标签之类的vnode会直接跳过这里
     if (createComponent(vnode, insertedVnodeQueue, parentElm, refElm)) {
       return
     }
@@ -165,6 +167,7 @@ export function createPatchFunction (backend) {
         }
       }
 
+      // 根据tag名称创建元素
       vnode.elm = vnode.ns
         ? nodeOps.createElementNS(vnode.ns, tag)
         : nodeOps.createElement(tag, vnode)
@@ -190,20 +193,30 @@ export function createPatchFunction (backend) {
           insert(parentElm, vnode.elm, refElm)
         }
       } else {
+        // 对每一个子元素执行createElm这个方法
         createChildren(vnode, children, insertedVnodeQueue)
         if (isDef(data)) {
+          // 通过调用style，class，attrs等函数来把data加到
+          // 刚刚创建的元素上面去
           invokeCreateHooks(vnode, insertedVnodeQueue)
         }
+        // 将这个元素插入到父元素上面去
+        // 因为createChild在该方法之前调用，所以节点插入的顺序是先子后父
+       // 这里需要注意的是，由于是从子到付，最后一次调用（就是初始化new Vue()创建的vnode是没有parentElm的）
+       // 它的调用时在createComponent中调用的，这个vnode是存在componentInstance实例的
         insert(parentElm, vnode.elm, refElm)
       }
 
       if (process.env.NODE_ENV !== 'production' && data && data.pre) {
         creatingElmInVPre--
       }
+
+      // vnode是一个注释节点
     } else if (isTrue(vnode.isComment)) {
       vnode.elm = nodeOps.createComment(vnode.text)
       insert(parentElm, vnode.elm, refElm)
     } else {
+      // 否则就是一个文本节点
       vnode.elm = nodeOps.createTextNode(vnode.text)
       insert(parentElm, vnode.elm, refElm)
     }
@@ -212,7 +225,10 @@ export function createPatchFunction (backend) {
   function createComponent (vnode, insertedVnodeQueue, parentElm, refElm) {
     let i = vnode.data
     if (isDef(i)) {
+      // 判断是不是keep-alive组件
       const isReactivated = isDef(vnode.componentInstance) && i.keepAlive
+      // 这个函数是创建组件vnode时候添加的，普通的vnode是没有的
+      // 可以在src\core\vdom\create-component.js查看
       if (isDef(i = i.hook) && isDef(i = i.init)) {
         i(vnode, false /* hydrating */)
       }
@@ -220,13 +236,18 @@ export function createPatchFunction (backend) {
       // it should've created a child instance and mounted it. the child
       // component also has set the placeholder vnode's elm.
       // in that case we can just return the element and be done.
-      
+      // 这个属性是组件vnode执行init方法添加的
       if (isDef(vnode.componentInstance)) {
+        // 写在template中的组件其实知识一个占位左右的，
+        // 真正构建子节点的是里面生成的render函数
+        // 所以这里要通过上面传入的parentElm来插入
+        
         initComponent(vnode, insertedVnodeQueue)
         insert(parentElm, vnode.elm, refElm)
         if (isTrue(isReactivated)) {
           reactivateComponent(vnode, insertedVnodeQueue, parentElm, refElm)
         }
+        // 这里返回true，就不用执行patch函数中下面的插入代码了
         return true
       }
     }
@@ -704,7 +725,7 @@ export function createPatchFunction (backend) {
     }
   }
 
-  return function patch (oldVnode, vnode, hydrating, removeOnly) {
+  return function patchpatch (oldVnode, vnode, hydrating, removeOnly) {
     if (isUndef(vnode)) {
       // 没有新的vnode只有旧vnode，说明组件被销毁
       // 调用组件及子组件的destroy钩子函数
@@ -720,10 +741,9 @@ export function createPatchFunction (backend) {
       // empty mount (likely as component), create new root element
       isInitialPatch = true
       createElm(vnode, insertedVnodeQueue)
-    } else {
-      
+    } else {   
       const isRealElement = isDef(oldVnode.nodeType)
-      // oldVode存在但不是html节点，并且和vnode是同一个
+      // oldVode存在但不是html节点，并且和vnode是有着相同结构
       // vode，说明是更新组件节点
       if (!isRealElement && sameVnode(oldVnode, vnode)) {
         // patch existing root node
@@ -756,6 +776,7 @@ export function createPatchFunction (backend) {
           // either not server-rendered, or hydration failed.
           // create an empty node and replace it
           // 创建一个空的vnode，传入元素的基本属性（他跟Name，元素引用）
+          // 这里是为了下面的代码可以复用，抹平oldVnode是HMLT节点的情况
           oldVnode = emptyNodeAt(oldVnode)
         }
 
@@ -766,6 +787,7 @@ export function createPatchFunction (backend) {
         const parentElm = nodeOps.parentNode(oldElm)
 
         // create new node
+        // 重新创建元素
         createElm(
           vnode,
           insertedVnodeQueue,
@@ -808,6 +830,9 @@ export function createPatchFunction (backend) {
 
         // destroy old node
         if (isDef(parentElm)) {
+          // 代码进行到这里，页面上其实是存在两个 #app 节点的
+          // 一个是原先就存在的作为占位符的
+          // 另一个则是createElm过程中插入的，所以要把原先的那个给删除掉
           removeVnodes([oldVnode], 0, 0)
         } else if (isDef(oldVnode.tag)) {
           invokeDestroyHook(oldVnode)

@@ -154,6 +154,8 @@ export function mountComponent (
   el: ?Element,
   hydrating?: boolean
 ): Component {
+
+  // 子组件mount过程中 $el 是undefined
   vm.$el = el
   // 到这里还没有render函数就说明可能是
   // Vue版本不对了

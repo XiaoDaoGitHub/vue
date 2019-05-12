@@ -36,7 +36,7 @@ import {
 const componentVNodeHooks = {
   init (vnode: VNodeWithData, hydrating: boolean): ?boolean {
     // keep-alive组件会有componentInstance
-    // 应为组件并没有被销毁，第一次创建的时候也没有
+    // 因为组件并没有被销毁，第一次创建的时候也没有
     if (
       vnode.componentInstance &&
       !vnode.componentInstance._isDestroyed &&
@@ -46,11 +46,12 @@ const componentVNodeHooks = {
       const mountedNode: any = vnode // work around flow
       componentVNodeHooks.prepatch(mountedNode, mountedNode)
     } else {
-      // 
+      // 这里会调用在createComponent中调用Vue.entend创建的子构造函数
       const child = vnode.componentInstance = createComponentInstanceForVnode(
         vnode,
         activeInstance
       )
+      // 执行子组件的mount 方法，这个方法在src\platforms\web\entry-runtime-with-compiler.js
       child.$mount(hydrating ? vnode.elm : undefined, hydrating)
     }
   },
@@ -182,6 +183,7 @@ export function createComponent (
   // extract listeners, since these needs to be treated as
   // child component listeners instead of DOM listeners
   // 将用native修饰的事件替换到data.on上面
+  
   const listeners = data.on
   // replace with listeners with .native modifier
   // so it gets processed during parent component patch.

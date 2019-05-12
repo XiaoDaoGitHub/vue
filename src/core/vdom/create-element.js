@@ -101,7 +101,7 @@ export function _createElement (
   }
   let vnode, ns
 
-  // 手写render函数
+  // tag是字符串
   if (typeof tag === 'string') {
     let Ctor
     // 组件有没有命名空间
@@ -120,7 +120,7 @@ export function _createElement (
         config.parsePlatformTagName(tag), data, children,
         undefined, undefined, context
       )
-      // 是否是定义的组件标签名
+      // tag是已经定义过的组件名
     } else if ((!data || !data.pre) && isDef(Ctor = resolveAsset(context.$options, 'components', tag))) {
       // component
       vnode = createComponent(Ctor, data, context, children, tag)
@@ -135,7 +135,7 @@ export function _createElement (
       )
     }
   } else {
-    // direct component options / constructor
+    // 组件才会调用
     vnode = createComponent(tag, data, context, children)
   }
   if (Array.isArray(vnode)) {
