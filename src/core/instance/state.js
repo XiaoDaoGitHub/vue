@@ -165,6 +165,7 @@ function initData (vm: Component) {
   }
   // observe data
   // 将data的每一个数据都通过Object.defineProperty定义一遍
+  // 位于src\core\observer\index.js下面
   observe(data, true /* asRootData */)
 }
 

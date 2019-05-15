@@ -77,6 +77,7 @@ function flushSchedulerQueue () {
   // This ensures that:
   // 1. Components are updated from parent to child. (because parent is always
   //    created before the child)
+  // 组件更新是从父到子的
   // 2. A component's user watchers are run before its render watcher (because
   //    user watchers are created before the render watcher)
   // 3. If a component is destroyed during a parent component's watcher run,
@@ -88,9 +89,11 @@ function flushSchedulerQueue () {
   for (index = 0; index < queue.length; index++) {
     watcher = queue[index]
     if (watcher.before) {
+      // 调用beforeUpdate钩子函数
       watcher.before()
     }
     id = watcher.id
+    // 将当前更新的id除去
     has[id] = null
     watcher.run()
     // in dev build, check and stop circular updates.
@@ -114,10 +117,13 @@ function flushSchedulerQueue () {
   const activatedQueue = activatedChildren.slice()
   const updatedQueue = queue.slice()
 
+  // 将变量重新初始化
   resetSchedulerState()
 
   // call component updated and activated hooks
+  // 调用activated钩子函数
   callActivatedHooks(activatedQueue)
+  // 调用updated钩子函数
   callUpdatedHooks(updatedQueue)
 
   // devtool hook
@@ -160,17 +166,23 @@ function callActivatedHooks (queue) {
  * Push a watcher into the watcher queue.
  * Jobs with duplicate IDs will be skipped unless it's
  * pushed when the queue is being flushed.
+ * 将多个watcher添加到同一个队列中去，然后再统一更新，
+ * 避免刚更新值又被修改了又要更新
  */
 export function queueWatcher (watcher: Watcher) {
   const id = watcher.id
   if (has[id] == null) {
+    // 同一个watcher只添加一次
     has[id] = true
+    // flushing为false表示当前还未更新queue队列，true表示正在循环更新queue队列中的watcher
     if (!flushing) {
+      // 将wathcer添加到队列中去
       queue.push(watcher)
     } else {
       // if already flushing, splice the watcher based on its id
       // if already past its id, it will be run next immediately.
       let i = queue.length - 1
+      // queue 是按照id的循序从小到大排序的
       while (i > index && queue[i].id > watcher.id) {
         i--
       }
@@ -184,6 +196,7 @@ export function queueWatcher (watcher: Watcher) {
         flushSchedulerQueue()
         return
       }
+      // 在下一次事件循环执行
       nextTick(flushSchedulerQueue)
     }
   }

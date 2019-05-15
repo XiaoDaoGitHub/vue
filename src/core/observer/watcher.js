@@ -132,10 +132,12 @@ export default class Watcher {
    */
   addDep (dep: Dep) {
     const id = dep.id
+    // 防止重复添加同一个依赖
     if (!this.newDepIds.has(id)) {
       this.newDepIds.add(id)
       this.newDeps.push(dep)
       if (!this.depIds.has(id)) {
+        // 将当前这个watcher添加到dep的订阅者队列中去
         dep.addSub(this)
       }
     }

@@ -30,12 +30,15 @@ export default class Dep {
 
   depend () {
     if (Dep.target) {
+      // Dep.target当前触发get的watcher，调用watcher的addDep方法
+      // watcher定义在src\core\observer\watcher.js
       Dep.target.addDep(this)
     }
   }
 
   notify () {
     // stabilize the subscriber list first
+    // 对当前subs进行一次浅拷贝，防止直接修改subs
     const subs = this.subs.slice()
     if (process.env.NODE_ENV !== 'production' && !config.async) {
       // subs aren't sorted in scheduler if not running async
@@ -44,6 +47,7 @@ export default class Dep {
       subs.sort((a, b) => a.id - b.id)
     }
     for (let i = 0, l = subs.length; i < l; i++) {
+      // 循环调用watcher的update()方法来更新视图
       subs[i].update()
     }
   }
