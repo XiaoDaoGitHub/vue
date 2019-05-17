@@ -157,6 +157,8 @@ export function defineReactive (
   customSetter?: ?Function,
   shallow?: boolean
 ) {
+
+  // 初始化一个订阅对象，当触发get的时候来添加订阅者
   const dep = new Dep()
 
   const property = Object.getOwnPropertyDescriptor(obj, key)
@@ -166,6 +168,7 @@ export function defineReactive (
   }
 
   // cater for pre-defined getter/setters
+  // 这里会看我们是否自己定义了getter和setter函数
   const getter = property && property.get
   const setter = property && property.set
   if ((!getter || setter) && arguments.length === 2) {
@@ -213,7 +216,9 @@ export function defineReactive (
         customSetter()
       }
       // #7981: for accessor properties without setter
+      // 只定义了getter而没有定义setter
       if (getter && !setter) return
+      // 定义了setter函数的话则调用我们定义的setter函数
       if (setter) {
         
         setter.call(obj, newVal)

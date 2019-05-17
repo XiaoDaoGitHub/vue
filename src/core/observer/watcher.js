@@ -185,6 +185,7 @@ export default class Watcher {
    */
   run () {
     if (this.active) {
+      // 重新调用依次get函数
       const value = this.get()
       if (
         value !== this.value ||
