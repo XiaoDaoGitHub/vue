@@ -49,6 +49,7 @@ export function createCompileToFunctionFn (compile: Function): Function {
     }
 
     // check cache
+    // 对相同模板只编译一次，后续直接从缓存中取
     const key = options.delimiters
       ? String(options.delimiters) + template
       : template
@@ -57,6 +58,7 @@ export function createCompileToFunctionFn (compile: Function): Function {
     }
 
     // compile
+    // 将模板编译为render函数
     const compiled = compile(template, options)
 
     // check compilation errors/tips
@@ -90,6 +92,7 @@ export function createCompileToFunctionFn (compile: Function): Function {
     // turn code into functions
     const res = {}
     const fnGenErrors = []
+    // 生成render函数
     res.render = createFunction(compiled.render, fnGenErrors)
     res.staticRenderFns = compiled.staticRenderFns.map(code => {
       return createFunction(code, fnGenErrors)

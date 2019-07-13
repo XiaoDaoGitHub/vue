@@ -66,7 +66,7 @@ export function _createElement (
   }
   // object syntax in v-bind
 
-  // 可以在组件上面添加 is 属性
+  // 可以在组件上面添加 is 属性，组件真正渲染的是is指向的内容
   if (isDef(data) && isDef(data.is)) {
     tag = data.is
   }
@@ -128,7 +128,7 @@ export function _createElement (
       // unknown or unlisted namespaced elements
       // check at runtime because it may get assigned a namespace when its
       // parent normalizes children
-      // 不是html标签，也不是组件名称，创建一个vnode
+      // 不是html标签，也不是组件名称，创建一个自定义标签
       vnode = new VNode(
         tag, data, children,
         undefined, undefined, context

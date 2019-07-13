@@ -17,7 +17,7 @@ import VNode, { createEmptyVNode } from '../vdom/vnode'
 import { isUpdatingChildComponent } from './lifecycle'
 
 
-// 初始化一些在Render过程中的方法
+// 初始化一些在渲染过程中的方法
 export function initRender (vm: Component) {
   vm._vnode = null // the root of the child tree
   vm._staticTrees = null // v-once cached trees

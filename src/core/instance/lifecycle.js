@@ -158,7 +158,7 @@ export function mountComponent (
   // 子组件mount过程中 $el 是undefined
   vm.$el = el
   // 到这里还没有render函数就说明可能是
-  // Vue版本不对了
+  // Vue选择的基础版本不对了
   if (!vm.$options.render) {
     vm.$options.render = createEmptyVNode
     if (process.env.NODE_ENV !== 'production') {
@@ -356,6 +356,7 @@ export function deactivateChildComponent (vm: Component, direct?: boolean) {
 // 循环调用对应的钩子函数
 export function callHook (vm: Component, hook: string) {
   // #7573 disable dep collection when invoking lifecycle hooks
+  // 生命周期函数不是响应式的，所以要把dep collection禁用掉
   pushTarget()
   const handlers = vm.$options[hook]
   const info = `${hook} hook`

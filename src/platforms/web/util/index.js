@@ -8,8 +8,10 @@ export * from './element'
 
 /**
  * Query an element selector if it's not an element already.
+ * 
  */
 export function query (el: string | Element): Element {
+  // 多次调用返回同一结果
   if (typeof el === 'string') {
     const selected = document.querySelector(el)
     if (!selected) {

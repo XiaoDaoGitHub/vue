@@ -61,18 +61,26 @@ export function parseHTML (html, options) {
   while (html) {
     last = html
     // Make sure we're not in a plaintext content element like script/style
+    // 不是是结束标签或者不是是style、script、textarea这样的标签会进入解析
     if (!lastTag || !isPlainTextElement(lastTag)) {
+      // 第一个字符是不是<标签开头
       let textEnd = html.indexOf('<')
       if (textEnd === 0) {
         // Comment:
+        // 判断注释节点<!--
         if (comment.test(html)) {
+          // 获取注释节点结束的位置
           const commentEnd = html.indexOf('-->')
 
           if (commentEnd >= 0) {
+            // 是否保留注释
             if (options.shouldKeepComment) {
               options.comment(html.substring(4, commentEnd), index, index + commentEnd + 3)
             }
+            // 位置加上-->的长度就是注释节点的结束位置
+            // advance 函数是将函数进行截断
             advance(commentEnd + 3)
+            // 每次advance后都重新开始
             continue
           }
         }

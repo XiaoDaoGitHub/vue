@@ -81,11 +81,16 @@ export function parse (
   options: CompilerOptions
 ): ASTElement | void {
   warn = options.warn || baseWarn
-
+  // 判断是不是pre标签
   platformIsPreTag = options.isPreTag || no
+  // ?? 
   platformMustUseProp = options.mustUseProp || no
   platformGetTagNamespace = options.getTagNamespace || no
+
+  // html保留标签
   const isReservedTag = options.isReservedTag || no
+
+  // 
   maybeComponent = (el: ASTElement) => !!el.component || !isReservedTag(el.tag)
 
   transforms = pluckModuleFunction(options.modules, 'transformNode')

@@ -10,10 +10,11 @@ export function createCompilerCreator (baseCompile: Function): Function {
       template: string,
       options?: CompilerOptions
     ): CompiledResult {
+      // 防止修改到baseOptions
       const finalOptions = Object.create(baseOptions)
       const errors = []
       const tips = []
-
+      // 用来存放错误队列
       let warn = (msg, range, tip) => {
         (tip ? tips : errors).push(msg)
       }
@@ -37,11 +38,13 @@ export function createCompilerCreator (baseCompile: Function): Function {
           }
         }
         // merge custom modules
+        // 合并自定义modules
         if (options.modules) {
           finalOptions.modules =
             (baseOptions.modules || []).concat(options.modules)
         }
         // merge custom directives
+        // 合并自定义指令
         if (options.directives) {
           finalOptions.directives = extend(
             Object.create(baseOptions.directives || null),
@@ -49,6 +52,8 @@ export function createCompilerCreator (baseCompile: Function): Function {
           )
         }
         // copy other options
+
+        // 合并其他的options
         for (const key in options) {
           if (key !== 'modules' && key !== 'directives') {
             finalOptions[key] = options[key]
@@ -57,7 +62,7 @@ export function createCompilerCreator (baseCompile: Function): Function {
       }
 
       finalOptions.warn = warn
-
+      // 编译template
       const compiled = baseCompile(template.trim(), finalOptions)
       if (process.env.NODE_ENV !== 'production') {
         detectErrors(compiled.ast, warn)
@@ -69,6 +74,7 @@ export function createCompilerCreator (baseCompile: Function): Function {
 
     return {
       compile,
+      // 调用compile函数生成render函数并缓存
       compileToFunctions: createCompileToFunctionFn(compile)
     }
   }
