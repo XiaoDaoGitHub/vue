@@ -15,6 +15,7 @@ import { unicodeRegExp } from 'core/util/lang'
 
 // Regular Expressions for parsing tags and attributes
 const attribute = /^\s*([^\s"'<>\/=]+)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/
+                              //  匹配 ___ = ____ 属性
 const dynamicArgAttribute = /^\s*((?:v-[\w-]+:|@|:|#)\[[^=]+\][^\s"'<>\/=]*)(?:\s*(=)\s*(?:"([^"]*)"+|'([^']*)'+|([^\s"'=<>`]+)))?/
 const ncname = `[a-zA-Z_][\\-\\.0-9_a-zA-Z${unicodeRegExp.source}]*`
 const qnameCapture = `((?:${ncname}\\:)?${ncname})`
@@ -69,6 +70,7 @@ export function parseHTML (html, options) {
         // Comment:
         // 判断注释节点<!--
         if (comment.test(html)) {
+
           // 获取注释节点结束的位置
           const commentEnd = html.indexOf('-->')
 
@@ -86,6 +88,7 @@ export function parseHTML (html, options) {
         }
 
         // http://en.wikipedia.org/wiki/Conditional_comment#Downlevel-revealed_conditional_comment
+        // 条件注释也跳过
         if (conditionalComment.test(html)) {
           const conditionalEnd = html.indexOf(']>')
 
@@ -96,6 +99,7 @@ export function parseHTML (html, options) {
         }
 
         // Doctype:
+        // doctype声明
         const doctypeMatch = html.match(doctype)
         if (doctypeMatch) {
           advance(doctypeMatch[0].length)
@@ -103,6 +107,7 @@ export function parseHTML (html, options) {
         }
 
         // End tag:
+        // 结束标签
         const endTagMatch = html.match(endTag)
         if (endTagMatch) {
           const curIndex = index
@@ -193,22 +198,29 @@ export function parseHTML (html, options) {
   }
 
   function parseStartTag () {
+    // 匹配html开始标签
     const start = html.match(startTagOpen)
     if (start) {
+      // 保存开始位置以及标签名
       const match = {
         tagName: start[1],
         attrs: [],
         start: index
       }
+      // 将标签名截取掉
       advance(start[0].length)
-      let end, attr
+      let end, attr 
+      //        截取后不是结束标签                            匹配v-,:@,#_ = __这样的vue标识的属性       普通的属性
       while (!(end = html.match(startTagClose)) && (attr = html.match(dynamicArgAttribute) || html.match(attribute))) {
+        
         attr.start = index
         advance(attr[0].length)
         attr.end = index
+        // 匹配的属性保存起来
         match.attrs.push(attr)
       }
       if (end) {
+        // end[1]有值说明是一个一元标签<img />这样
         match.unarySlash = end[1]
         advance(end[0].length)
         match.end = index
