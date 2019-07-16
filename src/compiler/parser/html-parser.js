@@ -230,7 +230,9 @@ export function parseHTML (html, options) {
   }
 
   function handleStartTag (match) {
+    // 标签名
     const tagName = match.tagName
+    // 是不是单标签，ture为单标签
     const unarySlash = match.unarySlash
 
     if (expectHTML) {
@@ -242,18 +244,22 @@ export function parseHTML (html, options) {
       }
     }
 
+    
     const unary = isUnaryTag(tagName) || !!unarySlash
 
     const l = match.attrs.length
     const attrs = new Array(l)
     for (let i = 0; i < l; i++) {
       const args = match.attrs[i]
+      // 根据attr匹配的正则，获取到属性的结果，结果分三种情况："",''和两个都没有
       const value = args[3] || args[4] || args[5] || ''
+      // 
       const shouldDecodeNewlines = tagName === 'a' && args[1] === 'href'
         ? options.shouldDecodeNewlinesForHref
         : options.shouldDecodeNewlines
       attrs[i] = {
         name: args[1],
+        // 对值进行转码，替换特需字符，防止xss攻击
         value: decodeAttr(value, shouldDecodeNewlines)
       }
       if (process.env.NODE_ENV !== 'production' && options.outputSourceRange) {
@@ -261,8 +267,9 @@ export function parseHTML (html, options) {
         attrs[i].end = args.end
       }
     }
-
+    // 不是单标签
     if (!unary) {
+      // 存放到stack中，用于校验标签是否闭合
       stack.push({ tag: tagName, lowerCasedTag: tagName.toLowerCase(), attrs: attrs, start: match.start, end: match.end })
       lastTag = tagName
     }

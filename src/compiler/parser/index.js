@@ -25,8 +25,11 @@ export const onRE = /^@|^v-on:/
 export const dirRE = process.env.VBIND_PROP_SHORTHAND
   ? /^v-|^@|^:|^\.|^#/
   : /^v-|^@|^:|^#/
+  // 匹配 for in || for of 循环
 export const forAliasRE = /([\s\S]*?)\s+(?:in|of)\s+([\s\S]*)/
+// v-for 可以有三个值，
 export const forIteratorRE = /,([^,\}\]]*)(?:,([^,\}\]]*))?$/
+// 括号的开始与结束
 const stripParensRE = /^\(|\)$/g
 const dynamicArgRE = /^\[.*\]$/
 
@@ -166,6 +169,7 @@ export function parse (
     if (element.pre) {
       inVPre = false
     }
+    // 是不是pre标签
     if (platformIsPreTag(element.tag)) {
       inPre = false
     }
@@ -225,7 +229,7 @@ export function parse (
       if (isIE && ns === 'svg') {
         attrs = guardIESVGBug(attrs)
       }
-
+      // 创建一个抽象语法树对象
       let element: ASTElement = createASTElement(tag, attrs, currentParent)
       if (ns) {
         element.ns = ns
@@ -253,7 +257,7 @@ export function parse (
           }
         })
       }
-
+      // 是style或者script的type为text/javascript'
       if (isForbiddenTag(element) && !isServerRendering()) {
         element.forbidden = true
         process.env.NODE_ENV !== 'production' && warn(
@@ -270,14 +274,17 @@ export function parse (
       }
 
       if (!inVPre) {
+        // 是否有v-pre属性
         processPre(element)
         if (element.pre) {
           inVPre = true
         }
       }
+      // 是不是pre标签
       if (platformIsPreTag(element.tag)) {
         inPre = true
       }
+      // 有v-pre指令
       if (inVPre) {
         processRawAttrs(element)
       } else if (!element.processed) {
@@ -409,7 +416,7 @@ function processPre (el) {
     el.pre = true
   }
 }
-
+// 将属性规范话
 function processRawAttrs (el) {
   const list = el.attrsList
   const len = list.length
@@ -425,6 +432,8 @@ function processRawAttrs (el) {
         attrs[i].end = list[i].end
       }
     }
+
+    // 没有属性，并且不是pre标签
   } else if (!el.pre) {
     // non root node in pre blocks with no attributes
     el.plain = true
@@ -493,9 +502,12 @@ function processRef (el) {
 
 export function processFor (el: ASTElement) {
   let exp
+  // 存在v-for指令，将它从attrslist中移除并返回v-for的值
   if ((exp = getAndRemoveAttr(el, 'v-for'))) {
+    // 解析v-for的值
     const res = parseFor(exp)
     if (res) {
+      // 将res合并到el上
       extend(el, res)
     } else if (process.env.NODE_ENV !== 'production') {
       warn(
@@ -515,14 +527,22 @@ type ForParseResult = {
 
 export function parseFor (exp: string): ?ForParseResult {
   const inMatch = exp.match(forAliasRE)
+  // 没有匹配到 of 或者 in
   if (!inMatch) return
   const res = {}
+  // res.for存放用来遍历的对象
   res.for = inMatch[2].trim()
+  // 除去v-for的键值对的括号
   const alias = inMatch[1].trim().replace(stripParensRE, '')
+  // 匹配v-for的键值对
   const iteratorMatch = alias.match(forIteratorRE)
+  // 不止一个值，也就是v-for= (item, index )这样
   if (iteratorMatch) {
+    // 存放循环对象的value属性
     res.alias = alias.replace(forIteratorRE, '').trim()
+    // 存放循环对象的key
     res.iterator1 = iteratorMatch[1].trim()
+    // 第三个属性为索引
     if (iteratorMatch[2]) {
       res.iterator2 = iteratorMatch[2].trim()
     }
@@ -917,6 +937,7 @@ function parseModifiers (name: string): Object | void {
   }
 }
 
+// 对attrs数组做一个对象的映射
 function makeAttrsMap (attrs: Array<Object>): Object {
   const map = {}
   for (let i = 0, l = attrs.length; i < l; i++) {

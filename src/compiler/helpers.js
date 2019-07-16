@@ -186,6 +186,7 @@ export function getAndRemoveAttr (
   removeFromMap?: boolean
 ): ?string {
   let val
+  // 存在name属性，将它从attrslist中移除并返回name的值
   if ((val = el.attrsMap[name]) != null) {
     const list = el.attrsList
     for (let i = 0, l = list.length; i < l; i++) {
@@ -195,6 +196,7 @@ export function getAndRemoveAttr (
       }
     }
   }
+  // 移除name属性
   if (removeFromMap) {
     delete el.attrsMap[name]
   }
