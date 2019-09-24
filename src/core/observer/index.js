@@ -42,6 +42,7 @@ export class Observer {
   constructor (value: any) {
     this.value = value
     // 用来通知、保存订阅者数列
+    // 这里给数据触发更新的时候使用
     this.dep = new Dep()
     this.vmCount = 0
     // 通过object.defineProperty定义一个不可枚举的__ob__属性，
@@ -135,7 +136,7 @@ export function observe (value: any, asRootData: ?boolean): Observer | void {
     // 只有数组或者对象可以定义为响应式的，普通的数值是不行的
     // 这也是为什么data要定义为对象的原因
     (Array.isArray(value) || isPlainObject(value)) &&
-    // value是可以扩展的，被冻结(Object.freeze等)的对象是不能添加属性的
+    // value是可以扩展的，被冻结(Object.freeze,Object.preventExtensions,Object.seal等)的对象是不能添加属性的
     Object.isExtensible(value) &&
     !value._isVue
   ) {
@@ -171,12 +172,13 @@ export function defineReactive (
   // 这里会看我们是否自己定义了getter和setter函数
   const getter = property && property.get
   const setter = property && property.set
+  // length 不等于2说明传递了val字段，就不用再获取了
   if ((!getter || setter) && arguments.length === 2) {
     val = obj[key]
   }
 
   // 不是浅响应式，则对val也调用observe，val可能是数组或对象
-  // 将每一项都覆盖到
+  // 递归调用observer函数
   let childOb = !shallow && observe(val)
   Object.defineProperty(obj, key, {
     enumerable: true,
@@ -190,6 +192,10 @@ export function defineReactive (
       // 当触发get函数的时候，就可以通过dep.depend来将当前的watcher添加这个的订阅者中去
       if (Dep.target) {
         dep.depend()
+
+        // 当value是Array的时候，只对数组中值是对象的进行defineProperty
+        // 而我们获取普通值是无法触发数组每一项的get函数的，当我们通过this获取时，
+        // 这里会把当前的watcher添加到value的dep中
         if (childOb) {
           // 当前的这个val如果是引用类型的话，子元素也应该
           // 添加当前的Watcher，子元素改动，也要通知这个watcher
@@ -216,11 +222,11 @@ export function defineReactive (
         customSetter()
       }
       // #7981: for accessor properties without setter
-      // 只定义了getter而没有定义setter
+      // 通过Object.defineProerty值定义了get，没有定义set，所以set无效
       if (getter && !setter) return
       // 定义了setter函数的话则调用我们定义的setter函数
       if (setter) {
-        
+        // 调用自定义的setter
         setter.call(obj, newVal)
       } else {
         val = newVal

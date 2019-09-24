@@ -56,9 +56,11 @@ export function initExtend (Vue: GlobalAPI) {
     // the Vue instances at extension time, on the extended prototype. This
     // avoids Object.defineProperty calls for each instance created.
     // 在原型上挂在对应的属性
+    // 子组件的props在render器件就已经代理完成
     if (Sub.options.props) {
       initProps(Sub)
     }
+    // 初始化计算属性
     if (Sub.options.computed) {
       initComputed(Sub)
     }

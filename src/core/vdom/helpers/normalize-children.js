@@ -49,10 +49,13 @@ function normalizeArrayChildren (children: any, nestedIndex?: string): Array<VNo
     lastIndex = res.length - 1
     last = res[lastIndex]
     //  nested
+    // 数组的话则递归调用该方法
     if (Array.isArray(c)) {
       if (c.length > 0) {
         c = normalizeArrayChildren(c, `${nestedIndex || ''}_${i}`)
         // merge adjacent text nodes
+        // c[0]在children数组中是last的下一位
+        // 所以两个类型相同是可以合并的
         if (isTextNode(c[0]) && isTextNode(last)) {
           res[lastIndex] = createTextVNode(last.text + (c[0]: any).text)
           c.shift()
@@ -60,6 +63,8 @@ function normalizeArrayChildren (children: any, nestedIndex?: string): Array<VNo
         res.push.apply(res, c)
       }
     } else if (isPrimitive(c)) {
+      // 原始类型的话，如果前一位也是该类型，则拼接两个
+      // 否则创建一个新的文本节点
       if (isTextNode(last)) {
         // merge adjacent text nodes
         // this is necessary for SSR hydration because text nodes are
@@ -70,6 +75,7 @@ function normalizeArrayChildren (children: any, nestedIndex?: string): Array<VNo
         res.push(createTextVNode(c))
       }
     } else {
+      // c就是一个文本节点，同上
       if (isTextNode(c) && isTextNode(last)) {
         // merge adjacent text nodes
         res[lastIndex] = createTextVNode(last.text + c.text)

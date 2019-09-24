@@ -103,7 +103,7 @@ function initProps (vm: Component, propsOptions: Object) {
         }
       })
     } else {
-      // 将传入的属性定义为响应式到_prop上面
+      // 将传入的属性定义为响应式到_props上面
       defineReactive(props, key, value)
     }
     // static props are already proxied on the component's prototype
@@ -263,6 +263,8 @@ function createComputedGetter (key) {
       if (watcher.dirty) {
         watcher.evaluate()
       }
+      // 计算属性时多个值共同的结果
+      // 所以
       if (Dep.target) {
         watcher.depend()
       }

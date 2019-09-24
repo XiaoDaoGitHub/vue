@@ -172,6 +172,7 @@ export default class Watcher {
     /* istanbul ignore else */
     if (this.lazy) {
       this.dirty = true
+      // 如果配置watcher更新是同步的话直接调用当前的wathcer的run方法
     } else if (this.sync) {
       this.run()
     } else {
@@ -185,7 +186,7 @@ export default class Watcher {
    */
   run () {
     if (this.active) {
-      // 重新调用依次get函数
+      // 重新调用一次get函数，其实就是调用构件vnode和patch vnode
       const value = this.get()
       if (
         value !== this.value ||

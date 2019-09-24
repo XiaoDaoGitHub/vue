@@ -45,11 +45,12 @@ export function invokeWithErrorHandling (
   let res
   try {
     res = args ? handler.apply(context, args) : handler.call(context)
-    // async 函数会返回Promise对象 
+    // async 函数会返回Promise对象,promise是鸭子类型，可以通过是否有then和catch方法来判断
     if (res && !res._isVue && isPromise(res) && !res._handled) {
       res.catch(e => handleError(e, vm, info + ` (Promise/async)`))
       // issue #9511
       // avoid catch triggering multiple times when nested calls
+      // 防止多次调用
       res._handled = true
     }
   } catch (e) {

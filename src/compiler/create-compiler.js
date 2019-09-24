@@ -14,7 +14,7 @@ export function createCompilerCreator (baseCompile: Function): Function {
       const finalOptions = Object.create(baseOptions)
       const errors = []
       const tips = []
-      // 用来存放错误队列
+      // 用来存放错误消息队列
       let warn = (msg, range, tip) => {
         (tip ? tips : errors).push(msg)
       }
@@ -44,7 +44,7 @@ export function createCompilerCreator (baseCompile: Function): Function {
             (baseOptions.modules || []).concat(options.modules)
         }
         // merge custom directives
-        // 合并自定义指令
+        // 合并系统指令和自定义指令
         if (options.directives) {
           finalOptions.directives = extend(
             Object.create(baseOptions.directives || null),

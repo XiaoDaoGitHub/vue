@@ -27,6 +27,14 @@ const ALWAYS_NORMALIZE = 2
 // without getting yelled at by flow
 // 从_render进来，data children 没有，tag为传入的函数，
 // 可以时手写render函数，也可以时Vue-loader 编译生成的render函数
+/**
+ * 
+createElement
+(vm, "div", [
+    _vm._v("\n    " + _vm._s(_vm.arr) + "\n  "),
+    _c("button", { on: { click: _vm.showBtn } }, [_vm._v("click")])
+  ])
+ */
 export function createElement (
   context: Component,
   tag: any,
@@ -71,6 +79,7 @@ export function _createElement (
     tag = data.is
   }
   if (!tag) {
+    // 没有传入标签直接返回空vnode
     // in case of component :is set to falsy value
     return createEmptyVNode()
   }
@@ -94,6 +103,7 @@ export function _createElement (
     data.scopedSlots = { default: children[0] }
     children.length = 0
   }
+  // 把children转为同一格式的数组
   if (normalizationType === ALWAYS_NORMALIZE) {
     children = normalizeChildren(children)
   } else if (normalizationType === SIMPLE_NORMALIZE) {

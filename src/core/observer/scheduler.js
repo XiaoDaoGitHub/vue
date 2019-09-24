@@ -77,9 +77,10 @@ function flushSchedulerQueue () {
   // This ensures that:
   // 1. Components are updated from parent to child. (because parent is always
   //    created before the child)
-  // 组件更新是从父到子的
+  // 组件更新是从父到子的，因为父组件是先于子组件被创建
   // 2. A component's user watchers are run before its render watcher (because
   //    user watchers are created before the render watcher)
+  // 如果在组件更新期间子组件被销毁，可以跳过子组件渲染
   // 3. If a component is destroyed during a parent component's watcher run,
   //    its watchers can be skipped.
   queue.sort((a, b) => a.id - b.id)
@@ -114,6 +115,7 @@ function flushSchedulerQueue () {
   }
 
   // keep copies of post queues before resetting state
+  // activatedChildren用来存放keep-alive组件
   const activatedQueue = activatedChildren.slice()
   const updatedQueue = queue.slice()
 
@@ -172,7 +174,7 @@ function callActivatedHooks (queue) {
 export function queueWatcher (watcher: Watcher) {
   const id = watcher.id
   if (has[id] == null) {
-    // 同一个watcher只添加一次
+    // 同一个watcher在每次update的时候只添加一次，防止重复更新
     has[id] = true
     // flushing为false表示当前还未更新queue队列，true表示正在循环更新queue队列中的watcher
     if (!flushing) {
@@ -183,15 +185,17 @@ export function queueWatcher (watcher: Watcher) {
       // if already past its id, it will be run next immediately.
       let i = queue.length - 1
       // queue 是按照id的循序从小到大排序的
+      // 从小到大对应到watcher里面就是从外到内，也就是父组件先更新，子节点后更新
       while (i > index && queue[i].id > watcher.id) {
         i--
       }
+      // 插入到
       queue.splice(i + 1, 0, watcher)
     }
     // queue the flush
     if (!waiting) {
       waiting = true
-
+      // 开发环境也可以同步更新，生成环境只能是异步
       if (process.env.NODE_ENV !== 'production' && !config.async) {
         flushSchedulerQueue()
         return

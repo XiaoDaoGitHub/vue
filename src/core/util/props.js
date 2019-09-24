@@ -33,10 +33,11 @@ export function validateProp (
   // prop 是否含有bool值，
   const booleanIndex = getTypeIndex(Boolean, prop.type)
 
-  // 这里主要判断是否存在boolean值的情况
+  // 对type包含Boolan类型的一些情况做一层隐式转换
   // 分为定义了default属性，和定义了String类型的情况如 [Boolean, String];
   if (booleanIndex > -1) {
-    // 组件没有传，且没有定义default值，value 定义为 false
+    // Props的类型中包含Boolean，当我们没有传入且没有定义
+    // default时候，我们默认把value定义为false
     if (absent && !hasOwn(prop, 'default')) {
       value = false
 
@@ -44,9 +45,9 @@ export function validateProp (
     } else if (value === '' || value === hyphenate(key)) {
       // only cast empty string / same name to boolean if
       // boolean has higher priority
-      
       const stringIndex = getTypeIndex(String, prop.type)
       // props的type不为String类型 或者 Boolean定义在String前面
+      // 没有定义String类型或者boolean类型在string类型前面，默认value为true
       if (stringIndex < 0 || booleanIndex < stringIndex) {
         value = true
       }
@@ -82,6 +83,7 @@ export function validateProp (
  */
 function getPropDefaultValue (vm: ?Component, prop: PropOptions, key: string): any {
   // no default, return undefined
+  // 没有定义default字段返回undefined
   if (!hasOwn(prop, 'default')) {
     return undefined
   }
@@ -108,7 +110,7 @@ function getPropDefaultValue (vm: ?Component, prop: PropOptions, key: string): a
   }
   // call factory function for non-Function types
   // a value is Function if its prototype is function even across different execution context
-  // type 不是Function类型，调用该函数，返回返回值
+  // def是函数类型，返回调用的结果，否则直接返回这个数
   return typeof def === 'function' && getType(prop.type) !== 'Function'
     ? def.call(vm)
     : def

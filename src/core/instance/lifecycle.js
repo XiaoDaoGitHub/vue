@@ -330,9 +330,11 @@ export function activateChildComponent (vm: Component, direct?: boolean) {
   }
   if (vm._inactive || vm._inactive === null) {
     vm._inactive = false
+    // 钩子函数的调用是从子到父
     for (let i = 0; i < vm.$children.length; i++) {
       activateChildComponent(vm.$children[i])
     }
+    // 调用keep-alive组件的activated钩子函数
     callHook(vm, 'activated')
   }
 }
@@ -356,7 +358,8 @@ export function deactivateChildComponent (vm: Component, direct?: boolean) {
 // 循环调用对应的钩子函数
 export function callHook (vm: Component, hook: string) {
   // #7573 disable dep collection when invoking lifecycle hooks
-  // 生命周期函数不是响应式的，所以要把dep collection禁用掉
+  // 生命周期函数不是计算属性或监听函数，所以要把dep collection禁用掉
+  // 通过pushTarget传入undefined来达到禁用的目的
   pushTarget()
   const handlers = vm.$options[hook]
   const info = `${hook} hook`
