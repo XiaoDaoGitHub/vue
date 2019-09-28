@@ -116,7 +116,7 @@ export function parseHTML (html, options) {
           continue
         }
 
-        // Start tag:
+        // 解析html标签的属性容<div xxxx >
         const startTagMatch = parseStartTag()
         if (startTagMatch) {
           handleStartTag(startTagMatch)
@@ -128,12 +128,18 @@ export function parseHTML (html, options) {
       }
 
       let text, rest, next
+      // 走到这里说明开始html的开始标签已经处理完成，开始处理内容区域和闭合标签了
       if (textEnd >= 0) {
         rest = html.slice(textEnd)
+        // 
         while (
+          // 不是结束标签开头
           !endTag.test(rest) &&
+          // 不是开始标签开头
           !startTagOpen.test(rest) &&
+          // 不是注释开头
           !comment.test(rest) &&
+          // 不是兼容写法开头
           !conditionalComment.test(rest)
         ) {
           // < in plain text, be forgiving and treat it as text
@@ -142,13 +148,14 @@ export function parseHTML (html, options) {
           textEnd += next
           rest = html.slice(textEnd)
         }
+        // 获取到纯文本的值
         text = html.substring(0, textEnd)
       }
 
       if (textEnd < 0) {
         text = html
       }
-
+      // 去掉已经获取的值
       if (text) {
         advance(text.length)
       }
@@ -236,6 +243,9 @@ export function parseHTML (html, options) {
     const unarySlash = match.unarySlash
 
     if (expectHTML) {
+      // p标签里面如果包含有块级标签，则会在该标签在块级标签前面闭合p标签
+      // 气尾部p闭合标签前面增加开始标签
+      // <p><div>s</div></p> =>  <p></p><div>s</div><p></p>
       if (lastTag === 'p' && isNonPhrasingTag(tagName)) {
         parseEndTag(lastTag)
       }

@@ -26,6 +26,7 @@ import {
 function preTransformNode (el: ASTElement, options: CompilerOptions) {
   if (el.tag === 'input') {
     const map = el.attrsMap
+    // map里面没有，说明该标签没有定义v-model属性
     if (!map['v-model']) {
       return
     }

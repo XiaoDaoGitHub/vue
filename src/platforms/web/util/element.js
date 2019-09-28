@@ -34,7 +34,7 @@ export const isSVG = makeMap(
 export const isPreTag = (tag: ?string): boolean => tag === 'pre'
 
 export const isReservedTag = (tag: string): ?boolean => {
-  return s(tag) || isSVG(tag)
+  return isHTMLTag(tag) || isSVG(tag)
 }
 
 export function getTagNamespace (tag: string): ?string {

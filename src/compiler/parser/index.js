@@ -69,6 +69,7 @@ export function createASTElement (
     type: 1,
     tag,
     attrsList: attrs,
+    // map的作用是为了提高查询的速率，数据的查询匹配时间复杂度为O(n)，而map为O(1)
     attrsMap: makeAttrsMap(attrs),
     rawAttrsMap: {},
     parent,
@@ -86,16 +87,17 @@ export function parse (
   warn = options.warn || baseWarn
   // 判断是不是pre标签
   platformIsPreTag = options.isPreTag || no
-  // ?? 
+  // 是不是标签上的单属性如checked、mutd
   platformMustUseProp = options.mustUseProp || no
   platformGetTagNamespace = options.getTagNamespace || no
 
-  // html保留标签
+  // 是不是html标签
   const isReservedTag = options.isReservedTag || no
 
-  // 
+  // 判断是不是组件
   maybeComponent = (el: ASTElement) => !!el.component || !isReservedTag(el.tag)
 
+  // 对三种类别的函数进行分类
   transforms = pluckModuleFunction(options.modules, 'transformNode')
   preTransforms = pluckModuleFunction(options.modules, 'preTransformNode')
   postTransforms = pluckModuleFunction(options.modules, 'postTransformNode')
