@@ -8,8 +8,10 @@ import {
   baseWarn
 } from 'compiler/helpers'
 
+// 处理style
 function transformNode (el: ASTElement, options: CompilerOptions) {
   const warn = options.warn || baseWarn
+  // 获取style的值
   const staticStyle = getAndRemoveAttr(el, 'style')
   if (staticStyle) {
     /* istanbul ignore if */
@@ -27,7 +29,7 @@ function transformNode (el: ASTElement, options: CompilerOptions) {
     }
     el.staticStyle = JSON.stringify(parseStyleText(staticStyle))
   }
-
+  // 获取v-bing:style或者:style的值
   const styleBinding = getBindingAttr(el, 'style', false /* getStatic */)
   if (styleBinding) {
     el.styleBinding = styleBinding

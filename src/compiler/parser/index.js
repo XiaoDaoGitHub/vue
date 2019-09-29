@@ -446,28 +446,35 @@ export function processElement (
   element: ASTElement,
   options: CompilerOptions
 ) {
+  // 获取key的值绑定到element.key上面
   processKey(element)
 
   // determine whether this is a plain element after
   // removing structural attributes
+  // plain节点是不用递归去检查依赖的，可以直接渲染
   element.plain = (
     !element.key &&
     !element.scopedSlots &&
     !element.attrsList.length
   )
-
+  // 检查自己或者祖先节点是否存在v-for语句 el.ref = ref, el.checkFor = true/false
   processRef(element)
+  // 处理v-slot相关逻辑
   processSlotContent(element)
+  // slot标签不是真实的标签，是不能有key属性的，
   processSlotOutlet(element)
+  // 处理is属性和inline-template
   processComponent(element)
+  // 处理clas、style之类的
   for (let i = 0; i < transforms.length; i++) {
     element = transforms[i](element, options) || element
   }
   processAttrs(element)
   return element
 }
-
+// 获取key的值绑定到el.key上面
 function processKey (el) {
+  // 获取key的值
   const exp = getBindingAttr(el, 'key')
   if (exp) {
     if (process.env.NODE_ENV !== 'production') {
@@ -495,9 +502,11 @@ function processKey (el) {
 }
 
 function processRef (el) {
+  // 获取ref绑定的值
   const ref = getBindingAttr(el, 'ref')
   if (ref) {
     el.ref = ref
+    // 检查自己或者祖先节点是否存在v-for语句
     el.refInFor = checkInFor(el)
   }
 }
@@ -626,6 +635,7 @@ function processOnce (el) {
 function processSlotContent (el) {
   let slotScope
   if (el.tag === 'template') {
+    // 获取到scope的值
     slotScope = getAndRemoveAttr(el, 'scope')
     /* istanbul ignore if */
     if (process.env.NODE_ENV !== 'production' && slotScope) {
@@ -638,6 +648,7 @@ function processSlotContent (el) {
         true
       )
     }
+    // 获取scope|| slot-scope
     el.slotScope = slotScope || getAndRemoveAttr(el, 'slot-scope')
   } else if ((slotScope = getAndRemoveAttr(el, 'slot-scope'))) {
     /* istanbul ignore if */
@@ -654,9 +665,12 @@ function processSlotContent (el) {
   }
 
   // slot="xxx"
+  // 获取到v-slot、:slot、slot的值
   const slotTarget = getBindingAttr(el, 'slot')
   if (slotTarget) {
+    // 默认是default，否则就是所填的值
     el.slotTarget = slotTarget === '""' ? '"default"' : slotTarget
+    // 是否有:slot或v-bind:slot值
     el.slotTargetDynamic = !!(el.attrsMap[':slot'] || el.attrsMap['v-bind:slot'])
     // preserve slot as an attribute for native shadow DOM compat
     // only for non-scoped slots.
@@ -667,8 +681,10 @@ function processSlotContent (el) {
 
   // 2.6 v-slot syntax
   if (process.env.NEW_SLOT_SYNTAX) {
+    // v-slot或者#只能设置在template上面
     if (el.tag === 'template') {
       // v-slot on <template>
+      // 获取v-slot或者#属性的具名插槽
       const slotBinding = getAndRemoveAttrByRegex(el, slotRE)
       if (slotBinding) {
         if (process.env.NODE_ENV !== 'production') {
@@ -686,9 +702,13 @@ function processSlotContent (el) {
             )
           }
         }
+        // 返回slot的名字和是否是动态属性
         const { name, dynamic } = getSlotName(slotBinding)
+        // 设置slotTarget的名字
         el.slotTarget = name
+        // 设置slotTarget是否是动态的目标
         el.slotTargetDynamic = dynamic
+        // 设置作用域属性的值
         el.slotScope = slotBinding.value || emptySlotScopeToken // force it into a scoped slot for perf
       }
     } else {
@@ -737,9 +757,11 @@ function processSlotContent (el) {
     }
   }
 }
-
+// 返回slot的名字和是否是动态属性
 function getSlotName (binding) {
+  // 把 v-slot: 或者#等标识符去除
   let name = binding.name.replace(slotRE, '')
+  // 没有名称可能是没传或者使用默认插槽
   if (!name) {
     if (binding.name[0] !== '#') {
       name = 'default'
@@ -750,6 +772,7 @@ function getSlotName (binding) {
       )
     }
   }
+  // 判断是不是[],这样的动态属性
   return dynamicArgRE.test(name)
     // dynamic [name]
     ? { name: name.slice(1, -1), dynamic: true }
@@ -774,9 +797,11 @@ function processSlotOutlet (el) {
 
 function processComponent (el) {
   let binding
+  // 如果存在is属性，则is执行的组件才是真实组件名
   if ((binding = getBindingAttr(el, 'is'))) {
     el.component = binding
   }
+  // 判断是否是inline-template属性
   if (getAndRemoveAttr(el, 'inline-template') != null) {
     el.inlineTemplate = true
   }
@@ -786,7 +811,9 @@ function processAttrs (el) {
   const list = el.attrsList
   let i, l, name, rawName, value, modifiers, syncGen, isDynamic
   for (i = 0, l = list.length; i < l; i++) {
+    // 获取属性的名称 
     name = rawName = list[i].name
+    // 获取属性的值
     value = list[i].value
     if (dirRE.test(name)) {
       // mark element as dynamic
@@ -918,9 +945,10 @@ function processAttrs (el) {
     }
   }
 }
-
+// 检查自己或者祖先节点是否存在v-for语句
 function checkInFor (el: ASTElement): boolean {
   let parent = el
+  // 一直查找parent节点，知道找到for语句或者undefined为止
   while (parent) {
     if (parent.for !== undefined) {
       return true

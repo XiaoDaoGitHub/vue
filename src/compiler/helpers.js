@@ -34,6 +34,7 @@ export function addAttr (el: ASTElement, name: string, value: any, range?: Range
 }
 
 // add a raw attr (use this in preTransforms)
+// 给el元素添加一个属性
 export function addRawAttr (el: ASTElement, name: string, value: any, range?: Range) {
   el.attrsMap[name] = value
   el.attrsList.push(rangeSetItem({ name, value }, range))
@@ -149,6 +150,7 @@ export function addHandler (
   el.plain = false
 }
 
+// 获取绑定的数据
 export function getRawBindingAttr (
   el: ASTElement,
   name: string
@@ -157,18 +159,22 @@ export function getRawBindingAttr (
     el.rawAttrsMap['v-bind:' + name] ||
     el.rawAttrsMap[name]
 }
-
+// 获取bind的数据
 export function getBindingAttr (
   el: ASTElement,
   name: string,
   getStatic?: boolean
 ): ?string {
   const dynamicValue =
+    // 获取属性的值
     getAndRemoveAttr(el, ':' + name) ||
     getAndRemoveAttr(el, 'v-bind:' + name)
+    // 是动态的值
   if (dynamicValue != null) {
+    // 解析动态的值返回出去 类似于这种_f(name)(exp)
     return parseFilters(dynamicValue)
   } else if (getStatic !== false) {
+    // 没有动态的值直接从attrList中移除并返回字符串
     const staticValue = getAndRemoveAttr(el, name)
     if (staticValue != null) {
       return JSON.stringify(staticValue)

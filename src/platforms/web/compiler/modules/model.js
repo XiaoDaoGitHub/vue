@@ -32,7 +32,9 @@ function preTransformNode (el: ASTElement, options: CompilerOptions) {
     }
 
     let typeBinding
+    // 获取解析过后的属性
     if (map[':type'] || map['v-bind:type']) {
+      // 返回值格式 string || _f(name)(_f(name)(exp, args))
       typeBinding = getBindingAttr(el, 'type')
     }
     if (!map.type && !typeBinding && map['v-bind']) {
@@ -40,14 +42,21 @@ function preTransformNode (el: ASTElement, options: CompilerOptions) {
     }
 
     if (typeBinding) {
+      // 获取到v-if的值
       const ifCondition = getAndRemoveAttr(el, 'v-if', true)
+      // 拼接v-if字符串
       const ifConditionExtra = ifCondition ? `&&(${ifCondition})` : ``
+      // 判断是否存在v-else
       const hasElse = getAndRemoveAttr(el, 'v-else', true) != null
+      // 获取v-else-if的值
       const elseIfCondition = getAndRemoveAttr(el, 'v-else-if', true)
       // 1. checkbox
+      // clone一份ast节点
       const branch0 = cloneASTElement(el)
       // process for on the main node
+      // 处理v-for => {for: xx, alias: xx, iterator1?: xx, iterator2?:xx}
       processFor(branch0)
+      // 添加一个{name: type ,value: checkbox}属性
       addRawAttr(branch0, 'type', 'checkbox')
       processElement(branch0, options)
       branch0.processed = true // prevent it from double-processed
