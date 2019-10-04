@@ -56,17 +56,21 @@ export function genHandlers (
   events: ASTElementHandlers,
   isNative: boolean
 ): string {
+  // 是否是native event
   const prefix = isNative ? 'nativeOn:' : 'on:'
   let staticHandlers = ``
   let dynamicHandlers = ``
   for (const name in events) {
+    // 生成函数调用，处理修饰符
     const handlerCode = genHandler(events[name])
+    // 拼接函数
     if (events[name] && events[name].dynamic) {
       dynamicHandlers += `${name},${handlerCode},`
     } else {
       staticHandlers += `"${name}":${handlerCode},`
     }
   }
+  // 除去逗号,
   staticHandlers = `{${staticHandlers.slice(0, -1)}}`
   if (dynamicHandlers) {
     return prefix + `_d(${staticHandlers},[${dynamicHandlers.slice(0, -1)}])`
@@ -94,19 +98,23 @@ function genWeexHandler (params: Array<any>, handlerCode: string) {
 }
 
 function genHandler (handler: ASTElementHandler | Array<ASTElementHandler>): string {
+  // 没有handle直接返回空函数
   if (!handler) {
     return 'function(){}'
   }
-
+  // 数组则遍历每一项调用genHandler
   if (Array.isArray(handler)) {
     return `[${handler.map(handler => genHandler(handler)).join(',')}]`
   }
 
   const isMethodPath = simplePathRE.test(handler.value)
+  // 是不是函数表达式
   const isFunctionExpression = fnExpRE.test(handler.value)
+  // 是不是函数调用
   const isFunctionInvocation = simplePathRE.test(handler.value.replace(fnInvokeRE, ''))
-
+  // 没有事件的修饰符
   if (!handler.modifiers) {
+    // 是方法的路径或者是函数表达式直接返回值
     if (isMethodPath || isFunctionExpression) {
       return handler.value
     }
@@ -114,6 +122,7 @@ function genHandler (handler: ASTElementHandler | Array<ASTElementHandler>): str
     if (__WEEX__ && handler.params) {
       return genWeexHandler(handler.params, handler.value)
     }
+    // 否则返回一个函数包裹，
     return `function($event){${
       isFunctionInvocation ? `return ${handler.value}` : handler.value
     }}` // inline statement
@@ -122,14 +131,19 @@ function genHandler (handler: ASTElementHandler | Array<ASTElementHandler>): str
     let genModifierCode = ''
     const keys = []
     for (const key in handler.modifiers) {
+      // 是否是预定义的修饰符
       if (modifierCode[key]) {
+        // 拼接预定义的代码
         genModifierCode += modifierCode[key]
         // left/right
+        // 是不是特殊的按键
         if (keyCodes[key]) {
           keys.push(key)
         }
+      // 精确触发
       } else if (key === 'exact') {
         const modifiers: ASTModifiers = (handler.modifiers: any)
+        // 生成组合代码
         genModifierCode += genGuard(
           ['ctrl', 'shift', 'alt', 'meta']
             .filter(keyModifier => !modifiers[keyModifier])
@@ -141,6 +155,7 @@ function genHandler (handler: ASTElementHandler | Array<ASTElementHandler>): str
       }
     }
     if (keys.length) {
+      // 生成过滤代码
       code += genKeyFilter(keys)
     }
     // Make sure modifiers like prevent and stop get executed after key filtering

@@ -58,6 +58,7 @@ function preTransformNode (el: ASTElement, options: CompilerOptions) {
       processFor(branch0)
       // 添加一个{name: type ,value: checkbox}属性
       addRawAttr(branch0, 'type', 'checkbox')
+      // 处理key、slot、属性等
       processElement(branch0, options)
       branch0.processed = true // prevent it from double-processed
       branch0.if = `(${typeBinding})==='checkbox'` + ifConditionExtra

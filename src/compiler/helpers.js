@@ -61,6 +61,7 @@ export function addDirective (
   el.plain = false
 }
 
+// 拼接修饰符对应的符号和名称
 function prependModifierMarker (symbol: string, name: string, dynamic?: boolean): string {
   return dynamic
     ? `_p(${name},"${symbol}")`
@@ -94,13 +95,16 @@ export function addHandler (
   // normalize click.right and click.middle since they don't actually fire
   // this is technically browser-specific, but at least for now browsers are
   // the only target envs that have right/middle clicks.
+  // 处理鼠标的按键右键
   if (modifiers.right) {
+    //动态的话如果是click事件切换为contextmenu事件
     if (dynamic) {
       name = `(${name})==='click'?'contextmenu':(${name})`
     } else if (name === 'click') {
       name = 'contextmenu'
       delete modifiers.right
     }
+    // 动态的话如果是click事件切换为mouseup事件
   } else if (modifiers.middle) {
     if (dynamic) {
       name = `(${name})==='click'?'mouseup':(${name})`
@@ -110,21 +114,25 @@ export function addHandler (
   }
 
   // check capture modifier
+  // 处理capture修饰符
   if (modifiers.capture) {
     delete modifiers.capture
     name = prependModifierMarker('!', name, dynamic)
   }
+    // 处理once修饰符
   if (modifiers.once) {
     delete modifiers.once
     name = prependModifierMarker('~', name, dynamic)
   }
   /* istanbul ignore if */
+   // 处理passive修饰符
   if (modifiers.passive) {
     delete modifiers.passive
     name = prependModifierMarker('&', name, dynamic)
   }
 
   let events
+  // 处理native修饰符
   if (modifiers.native) {
     delete modifiers.native
     events = el.nativeEvents || (el.nativeEvents = {})

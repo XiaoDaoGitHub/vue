@@ -41,6 +41,7 @@ function markStatic (node: ASTNode) {
     // do not make component slot content static. this avoids
     // 1. components not able to mutate slot nodes
     // 2. static slot content fails for hot-reloading
+    // 组件、slot、inline-template直接返回
     if (
       !isPlatformReservedTag(node.tag) &&
       node.tag !== 'slot' &&
@@ -50,7 +51,9 @@ function markStatic (node: ASTNode) {
     }
     for (let i = 0, l = node.children.length; i < l; i++) {
       const child = node.children[i]
+      // 递归对每一个子节点调用
       markStatic(child)
+      // 没有static属性，则标记为false
       if (!child.static) {
         node.static = false
       }
@@ -58,6 +61,7 @@ function markStatic (node: ASTNode) {
     if (node.ifConditions) {
       for (let i = 1, l = node.ifConditions.length; i < l; i++) {
         const block = node.ifConditions[i].block
+        // 递归对if判断的block进行判断
         markStatic(block)
         if (!block.static) {
           node.static = false
@@ -68,6 +72,7 @@ function markStatic (node: ASTNode) {
 }
 
 function markStaticRoots (node: ASTNode, isInFor: boolean) {
+  // node的type是元素节点
   if (node.type === 1) {
     if (node.static || node.once) {
       node.staticInFor = isInFor
@@ -75,6 +80,7 @@ function markStaticRoots (node: ASTNode, isInFor: boolean) {
     // For a node to qualify as a static root, it should have children that
     // are not just static text. Otherwise the cost of hoisting out will
     // outweigh the benefits and it's better off to just always render it fresh.
+    // node是static并且子节点只有一个文本节点，标记为staticRoot
     if (node.static && node.children.length && !(
       node.children.length === 1 &&
       node.children[0].type === 3
@@ -85,10 +91,12 @@ function markStaticRoots (node: ASTNode, isInFor: boolean) {
       node.staticRoot = false
     }
     if (node.children) {
+      // 递归对子节点判断
       for (let i = 0, l = node.children.length; i < l; i++) {
         markStaticRoots(node.children[i], isInFor || !!node.for)
       }
     }
+    
     if (node.ifConditions) {
       for (let i = 1, l = node.ifConditions.length; i < l; i++) {
         markStaticRoots(node.ifConditions[i].block, isInFor)

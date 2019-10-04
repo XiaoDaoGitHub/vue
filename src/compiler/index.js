@@ -18,7 +18,9 @@ export const createCompiler = createCompilerCreator(function baseCompile (
 ): CompiledResult {
   // 解析template为抽象语法树
   const ast = parse(template.trim(), options)
+  
   if (options.optimize !== false) {
+    // 优化AST树，对静态节点做标记
     optimize(ast, options)
   }
   const code = generate(ast, options)

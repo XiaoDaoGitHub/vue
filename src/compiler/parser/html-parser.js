@@ -129,7 +129,7 @@ export function parseHTML (html, options) {
 
       let text, rest, next
       // 走到这里说明开始html的开始标签已经处理完成，开始处理内容区域和闭合标签了
-      if (textEnd >= 0) {
+      if (textEnd >= 0) {       
         rest = html.slice(textEnd)
         // 
         while (
@@ -297,6 +297,7 @@ export function parseHTML (html, options) {
     // Find the closest opened tag of the same type
     if (tagName) {
       lowerCasedTagName = tagName.toLowerCase()
+      // 从stack查找同名的标签
       for (pos = stack.length - 1; pos >= 0; pos--) {
         if (stack[pos].lowerCasedTag === lowerCasedTagName) {
           break

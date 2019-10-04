@@ -36,6 +36,7 @@ const dynamicArgRE = /^\[.*\]$/
 const argRE = /:(.*)$/
 export const bindRE = /^:|^\.|^v-bind:/
 const propBindRE = /^\./
+// 用来匹配链式调用
 const modifierRE = /\.[^.\]]+(?=[^\]]*$)/g
 
 const slotRE = /^v-slot(:|$)|^#/
@@ -123,9 +124,11 @@ export function parse (
   function closeElement (element) {
     trimEndingWhitespace(element)
     if (!inVPre && !element.processed) {
+      // 处理各种属性
       element = processElement(element, options)
     }
     // tree management
+    // root节点可能存在v-if、v-else、v-else-if属性
     if (!stack.length && element !== root) {
       // allow root elements with v-if, v-else-if and v-else
       if (root.if && (element.elseif || element.else)) {
@@ -146,28 +149,36 @@ export function parse (
       }
     }
     if (currentParent && !element.forbidden) {
+      // 处理else-if和else
       if (element.elseif || element.else) {
+        // 处理elseif、else
         processIfConditions(element, currentParent)
       } else {
         if (element.slotScope) {
           // scoped slot
           // keep it in the children list so that v-else(-if) conditions can
           // find it as the prev node.
+          // 是否存在slotTarget
           const name = element.slotTarget || '"default"'
+          // 通过slotTarget指向当前这个元素
           ;(currentParent.scopedSlots || (currentParent.scopedSlots = {}))[name] = element
         }
+        // 添加到currentParent的children队列中去
         currentParent.children.push(element)
+        // 保存关系
         element.parent = currentParent
       }
     }
 
     // final children cleanup
     // filter out scoped slots
+    // 移除children中的slotScope节点
     element.children = element.children.filter(c => !(c: any).slotScope)
     // remove trailing whitespace node again
     trimEndingWhitespace(element)
 
     // check pre state
+    // 结束标签来恢复变量的状态
     if (element.pre) {
       inVPre = false
     }
@@ -185,6 +196,7 @@ export function parse (
     // remove trailing whitespace node
     if (!inPre) {
       let lastNode
+      // 除去空的文本节点
       while (
         (lastNode = el.children[el.children.length - 1]) &&
         lastNode.type === 3 &&
@@ -271,12 +283,14 @@ export function parse (
       }
 
       // apply pre-transforms
+      // 对属性做处理
       for (let i = 0; i < preTransforms.length; i++) {
         element = preTransforms[i](element, options) || element
       }
-
+      // 是否有v-pre属性
       if (!inVPre) {
-        // 是否有v-pre属性
+        // 是否含有v-pre标签，有则标记pre为true
+        // v-pre则跳过这个元素和它的子元素的编译过程
         processPre(element)
         if (element.pre) {
           inVPre = true
@@ -288,23 +302,29 @@ export function parse (
       }
       // 有v-pre指令
       if (inVPre) {
+        // 对于pre，属性直接原样显示
         processRawAttrs(element)
       } else if (!element.processed) {
         // structural directives
+        // 解析v-for
         processFor(element)
+        // 解析v-if
         processIf(element)
+        // 解析v-once
         processOnce(element)
       }
-
+      // 判断根节点
       if (!root) {
         root = element
         if (process.env.NODE_ENV !== 'production') {
           checkRootConstraints(root)
         }
       }
-
+      // 不是单标签
       if (!unary) {
+        // 改变当前的标签
         currentParent = element
+        // 放element放到数组中去，数组的顺序就是节点的层级
         stack.push(element)
       } else {
         closeElement(element)
@@ -412,13 +432,13 @@ export function parse (
   })
   return root
 }
-
+// 是否含有v-pre标签，有则标记pre为true
 function processPre (el) {
   if (getAndRemoveAttr(el, 'v-pre') != null) {
     el.pre = true
   }
 }
-// 将属性规范话
+// 对于pre标签，直接原样显示
 function processRawAttrs (el) {
   const list = el.attrsList
   const len = list.length
@@ -438,6 +458,7 @@ function processRawAttrs (el) {
     // 没有属性，并且不是pre标签
   } else if (!el.pre) {
     // non root node in pre blocks with no attributes
+    // 
     el.plain = true
   }
 }
@@ -469,6 +490,7 @@ export function processElement (
   for (let i = 0; i < transforms.length; i++) {
     element = transforms[i](element, options) || element
   }
+  // 处理属性
   processAttrs(element)
   return element
 }
@@ -564,17 +586,23 @@ export function parseFor (exp: string): ?ForParseResult {
 }
 
 function processIf (el) {
+  // 回去v-if的值
   const exp = getAndRemoveAttr(el, 'v-if')
+  // 存在-v-if
   if (exp) {
+    // 保存到if属性上
     el.if = exp
+    // 存放v-if的表达式
     addIfCondition(el, {
       exp: exp,
       block: el
     })
   } else {
+    // 存在v-else
     if (getAndRemoveAttr(el, 'v-else') != null) {
       el.else = true
     }
+    // 存在v-else-if
     const elseif = getAndRemoveAttr(el, 'v-else-if')
     if (elseif) {
       el.elseif = elseif
@@ -583,8 +611,11 @@ function processIf (el) {
 }
 
 function processIfConditions (el, parent) {
+  // 获取前一个元素节点
+  // v-else或者v-else-if必须配合v-if使用
   const prev = findPrevElement(parent.children)
   if (prev && prev.if) {
+    // 给前一个节点添加elseif属性
     addIfCondition(prev, {
       exp: el.elseif,
       block: el
@@ -601,6 +632,7 @@ function processIfConditions (el, parent) {
 function findPrevElement (children: Array<any>): ASTElement | void {
   let i = children.length
   while (i--) {
+    // 是一个元素节点
     if (children[i].type === 1) {
       return children[i]
     } else {
@@ -625,6 +657,7 @@ export function addIfCondition (el: ASTElement, condition: ASTIfCondition) {
 
 function processOnce (el) {
   const once = getAndRemoveAttr(el, 'v-once')
+  // 标记once为true
   if (once != null) {
     el.once = true
   }
@@ -815,23 +848,32 @@ function processAttrs (el) {
     name = rawName = list[i].name
     // 获取属性的值
     value = list[i].value
+    // 这里是判断标记是否是动态属性，也就是v-、:、@、#这些属性都属于动态属性
     if (dirRE.test(name)) {
       // mark element as dynamic
+      // 标记元素是动态属性
       el.hasBindings = true
       // modifiers
+      // 获取修饰符.native .prevent等
       modifiers = parseModifiers(name.replace(dirRE, ''))
       // support .foo shorthand syntax for the .prop modifier
       if (process.env.VBIND_PROP_SHORTHAND && propBindRE.test(name)) {
         (modifiers || (modifiers = {})).prop = true
         name = `.` + name.slice(1).replace(modifierRE, '')
       } else if (modifiers) {
+        // 把修饰符都替换掉，只留下名字本身
         name = name.replace(modifierRE, '')
       }
+      // 是否是v-bind这样的动态属性
       if (bindRE.test(name)) { // v-bind
+        // 将绑定的标识符除去
         name = name.replace(bindRE, '')
+        // 解析value的值
         value = parseFilters(value)
+        // 判断name是不是[]这样的动态属性
         isDynamic = dynamicArgRE.test(name)
         if (isDynamic) {
+          // 去掉动态属性的[]
           name = name.slice(1, -1)
         }
         if (
@@ -843,16 +885,23 @@ function processAttrs (el) {
           )
         }
         if (modifiers) {
+          // 拥有.prop修饰符
           if (modifiers.prop && !isDynamic) {
+            // 将名称转为驼峰命名
             name = camelize(name)
+            // 。。。emm
             if (name === 'innerHtml') name = 'innerHTML'
           }
+          // 不是动态属性且有.camel
           if (modifiers.camel && !isDynamic) {
             name = camelize(name)
           }
+          // 拥有.sync修饰符，处理成v-on 侦听器
           if (modifiers.sync) {
+            // 处理成表到式
             syncGen = genAssignmentCode(value, `$event`)
             if (!isDynamic) {
+              // 添加事件
               addHandler(
                 el,
                 `update:${camelize(name)}`,
@@ -895,26 +944,34 @@ function processAttrs (el) {
         } else {
           addAttr(el, name, value, list[i], isDynamic)
         }
+        // 处理@和v-on
       } else if (onRE.test(name)) { // v-on
+        // 除去掉v-on和@符号
         name = name.replace(onRE, '')
         isDynamic = dynamicArgRE.test(name)
         if (isDynamic) {
           name = name.slice(1, -1)
         }
+        // 添加事件到el上
         addHandler(el, name, value, modifiers, false, warn, list[i], isDynamic)
+      // 这里说明是一个自定义的指令
       } else { // normal directives
+        // 除去掉v-、@、:等符号
         name = name.replace(dirRE, '')
         // parse arg
+        // 匹配并获取value部分
         const argMatch = name.match(argRE)
         let arg = argMatch && argMatch[1]
         isDynamic = false
         if (arg) {
           name = name.slice(0, -(arg.length + 1))
+          // 判断是不是动态值
           if (dynamicArgRE.test(arg)) {
             arg = arg.slice(1, -1)
             isDynamic = true
           }
         }
+        // 添加到指定集合中
         addDirective(el, name, rawName, value, arg, isDynamic, modifiers, list[i])
         if (process.env.NODE_ENV !== 'production' && name === 'model') {
           checkForAliasModel(el, value)
@@ -934,6 +991,7 @@ function processAttrs (el) {
           )
         }
       }
+      // 添加为普通的属性
       addAttr(el, name, JSON.stringify(value), list[i])
       // #6887 firefox doesn't update muted state if set via attribute
       // even immediately after element creation
@@ -959,9 +1017,11 @@ function checkInFor (el: ASTElement): boolean {
 }
 
 function parseModifiers (name: string): Object | void {
+  // 匹配.xxx这样的链式调用方法
   const match = name.match(modifierRE)
   if (match) {
     const ret = {}
+    // 去除掉.，设置该名称为true
     match.forEach(m => { ret[m.slice(1)] = true })
     return ret
   }
