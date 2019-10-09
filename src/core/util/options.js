@@ -451,7 +451,7 @@ export function mergeOptions (
     if (!hasOwn(parent, key)) {
       mergeField(key)
     }
-  }
+  } 
   function mergeField (key) {
     // 对于不同的key有不同的合并策略，其他没有定义的就使用defaultStrat
     const strat = strats[key] || defaultStrat

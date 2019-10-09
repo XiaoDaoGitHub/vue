@@ -49,7 +49,7 @@ export default class Watcher {
     options?: ?Object,
     isRenderWatcher?: boolean
   ) {
-    this.vm = vm
+   this.vm = vm
     if (isRenderWatcher) {
       vm._watcher = this
     }
@@ -70,7 +70,7 @@ export default class Watcher {
     this.dirty = this.lazy // for lazy watchers
     this.deps = []
     this.newDeps = []
-    this.depIds = new Set()
+    this.depIds = new Set() 
     this.newDepIds = new Set()
     this.expression = process.env.NODE_ENV !== 'production'
       ? expOrFn.toString()

@@ -121,6 +121,7 @@ export function createComponent (
   // plain options object: turn it into a constructor
   // 调用Vue.extend把Ctor变成钩子函数 （定义在src\core\global-api\extend.js）
   // 具备Vue的基本属性和方法
+  // 异步组件是一个函数，所以异步组件不会进入下面逻辑
   if (isObject(Ctor)) {
     Ctor = baseCtor.extend(Ctor)
   }
@@ -136,10 +137,11 @@ export function createComponent (
 
   // async component
   let asyncFactory
-  // 异步组件后面再说
+  // 异步组件没有通过Vue.extend方法构建成Vue实例，所以也没有cid
   if (isUndef(Ctor.cid)) {
     asyncFactory = Ctor
     Ctor = resolveAsyncComponent(asyncFactory, baseCtor)
+    // Ctor为undefined说明异步组件还在加载中会创建一个占位符的注释节点
     if (Ctor === undefined) {
       // return a placeholder node for async component, which is rendered
       // as a comment node but preserves all the raw information for the node.

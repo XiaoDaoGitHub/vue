@@ -43,7 +43,7 @@ export function createElement (
   normalizationType: any,
   alwaysNormalize: boolean
 ): VNode | Array<VNode> {
-  //这里的 data 可以不传
+  //data是标签的属性，没有属性的话可以为undefined
   if (Array.isArray(data) || isPrimitive(data)) {
     normalizationType = children
     children = data

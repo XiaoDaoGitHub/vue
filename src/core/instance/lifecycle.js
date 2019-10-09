@@ -100,6 +100,7 @@ export function lifecycleMixin (Vue: Class<Component>) {
 
   Vue.prototype.$forceUpdate = function () {
     const vm: Component = this
+    // 调用每一个对象的update函数，强制更新一次
     if (vm._watcher) {
       vm._watcher.update()
     }

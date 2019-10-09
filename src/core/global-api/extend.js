@@ -15,6 +15,7 @@ export function initExtend (Vue: GlobalAPI) {
 
   /**
    * Class inheritance
+   * 创建一个Vue的实例
    */
   Vue.extend = function (extendOptions: Object): Function {
     extendOptions = extendOptions || {}
