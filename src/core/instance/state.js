@@ -386,6 +386,7 @@ export function stateMixin (Vue: Class<Component>) {
     options = options || {}
     options.user = true
     const watcher = new Watcher(vm, expOrFn, cb, options)
+    // 带有immediate参数则会直接执行一次
     if (options.immediate) {
       try {
         cb.call(vm, watcher.value)

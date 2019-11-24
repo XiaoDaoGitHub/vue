@@ -844,6 +844,7 @@ function processAttrs (el) {
   const list = el.attrsList
   let i, l, name, rawName, value, modifiers, syncGen, isDynamic
   for (i = 0, l = list.length; i < l; i++) {
+    //
     // 获取属性的名称 
     name = rawName = list[i].name
     // 获取属性的值

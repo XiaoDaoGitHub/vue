@@ -344,6 +344,7 @@ function genDirectives (el: ASTElement, state: CodegenState): string | void {
   for (i = 0, l = dirs.length; i < l; i++) {
     dir = dirs[i]
     needRuntime = true
+    // 获取到定义好的指令
     const gen: DirectiveFunction = state.directives[dir.name]
     if (gen) {
       // compile-time directive that manipulates AST.
@@ -576,7 +577,7 @@ export function genComment (comment: ASTText): string {
 function genSlot (el: ASTElement, state: CodegenState): string {
   // 获取slot的名称
   const slotName = el.slotName || '"default"'
-  // 把slot的内容提出出来
+  // 把slot的内容提出出来，作为默认内容 
   const children = genChildren(el, state)
   // _t = renderSlot
   let res = `_t(${slotName}${children ? `,${children}` : ''}`

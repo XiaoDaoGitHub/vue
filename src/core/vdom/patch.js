@@ -34,7 +34,7 @@ const hooks = ['create', 'activate', 'update', 'remove', 'destroy']
 
 function sameVnode (a, b) {
   return (
-    a.key === b.key && (
+    a.key === b.key && ( 
       (
         a.tag === b.tag &&
         a.isComment === b.isComment &&

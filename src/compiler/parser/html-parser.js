@@ -219,7 +219,6 @@ export function parseHTML (html, options) {
       let end, attr 
       //        截取后不是结束标签                            匹配v-,:@,#_ = __这样的vue标识的属性       普通的属性
       while (!(end = html.match(startTagClose)) && (attr = html.match(dynamicArgAttribute) || html.match(attribute))) {
-        
         attr.start = index
         advance(attr[0].length)
         attr.end = index
@@ -309,6 +308,7 @@ export function parseHTML (html, options) {
     }
 
     if (pos >= 0) {
+      // stack最后一个元素的标签名不等于当前的标签名，则表示有元素没有闭合
       // Close all the open elements, up the stack
       for (let i = stack.length - 1; i >= pos; i--) {
         if (process.env.NODE_ENV !== 'production' &&

@@ -73,6 +73,7 @@ export function updateListeners (
         `Invalid handler for event "${event.name}": got ` + String(cur),
         vm
       )
+    // old不存在，说明是第一次创建
     } else if (isUndef(old)) {
       if (isUndef(cur.fns)) {
         cur = on[name] = createFnInvoker(cur, vm)
@@ -81,6 +82,7 @@ export function updateListeners (
         cur = on[name] = createOnceHandler(event.name, cur, event.capture)
       }
       add(event.name, cur, event.capture, event.passive, event.params)
+    // 更新只需要把fns替换掉就可以了，性能很高
     } else if (cur !== old) {
       old.fns = cur
       on[name] = old

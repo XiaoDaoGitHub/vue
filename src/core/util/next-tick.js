@@ -12,9 +12,11 @@ let pending = false
 
 function flushCallbacks () {
   pending = false
+  // 复制一份
   const copies = callbacks.slice(0)
   callbacks.length = 0
   for (let i = 0; i < copies.length; i++) {
+    // 依次执行每一个回调
     copies[i]()
   }
 }
@@ -39,9 +41,12 @@ let timerFunc
 // completely stops working after triggering a few times... so, if native
 // Promise is available, we will use it:
 /* istanbul ignore next, $flow-disable-line */
+// 浏览器是否原生支持Promise
 if (typeof Promise !== 'undefined' && isNative(Promise)) {
   const p = Promise.resolve()
+
   timerFunc = () => {
+    // 异步使用Promise.then方法
     p.then(flushCallbacks)
     // In problematic UIWebViews, Promise.then doesn't completely break, but
     // it can get stuck in a weird state where callbacks are pushed into the
@@ -50,7 +55,9 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
     // "force" the microtask queue to be flushed by adding an empty timer.
     if (isIOS) setTimeout(noop)
   }
+  // promise的then方法是微任务
   isUsingMicroTask = true
+  // 浏览器支持MutationObserver，降级为MutationObserver
 } else if (!isIE && typeof MutationObserver !== 'undefined' && (
   isNative(MutationObserver) ||
   // PhantomJS and iOS 7.x
@@ -60,16 +67,22 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
   // e.g. PhantomJS, iOS7, Android 4.4
   // (#6466 MutationObserver is unreliable in IE11)
   let counter = 1
+  // 创建一个对象
   const observer = new MutationObserver(flushCallbacks)
   const textNode = document.createTextNode(String(counter))
+  // 观察刚创建的textNode,characterData表示监听目标节点或子节点树中，节点所包含的字符数据的变化
   observer.observe(textNode, {
     characterData: true
   })
+
+  // 在timerFunc中触发observer的更新
   timerFunc = () => {
     counter = (counter + 1) % 2
     textNode.data = String(counter)
   }
+  // MutationObseever也是微任务
   isUsingMicroTask = true
+// 浏览器如果原生支持setImmediate，降级为这个
 } else if (typeof setImmediate !== 'undefined' && isNative(setImmediate)) {
   // Fallback to setImmediate.
   // Techinically it leverages the (macro) task queue,
@@ -77,6 +90,7 @@ if (typeof Promise !== 'undefined' && isNative(Promise)) {
   timerFunc = () => {
     setImmediate(flushCallbacks)
   }
+// 最后用setTimeout替代
 } else {
   // Fallback to setTimeout.
   timerFunc = () => {
@@ -102,6 +116,7 @@ export function nextTick (cb?: Function, ctx?: Object) {
     timerFunc()
   }
   // $flow-disable-line
+  // 如果没有传入cb，则返回promise
   if (!cb && typeof Promise !== 'undefined') {
     return new Promise(resolve => {
       _resolve = resolve

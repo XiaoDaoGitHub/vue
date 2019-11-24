@@ -20,9 +20,12 @@ const genStaticKeysCached = cached(genStaticKeys)
  */
 export function optimize (root: ?ASTElement, options: CompilerOptions) {
   if (!root) return
+  // 把需要检查的选项缓存为map结构
   isStaticKey = genStaticKeysCached(options.staticKeys || '')
+  // 是否是平台相关的tag
   isPlatformReservedTag = options.isReservedTag || no
   // first pass: mark all non-static nodes.
+  // 标记static节点，用作更新时优化
   markStatic(root)
   // second pass: mark static roots.
   markStaticRoots(root, false)
@@ -36,6 +39,7 @@ function genStaticKeys (keys: string): Function {
 }
 
 function markStatic (node: ASTNode) {
+  // 判断当前node是否满足static定义
   node.static = isStatic(node)
   if (node.type === 1) {
     // do not make component slot content static. this avoids
@@ -53,7 +57,7 @@ function markStatic (node: ASTNode) {
       const child = node.children[i]
       // 递归对每一个子节点调用
       markStatic(child)
-      // 没有static属性，则标记为false
+      // 子节点只要有一个不是static，则父节点全部标记static为false
       if (!child.static) {
         node.static = false
       }
@@ -74,6 +78,8 @@ function markStatic (node: ASTNode) {
 function markStaticRoots (node: ASTNode, isInFor: boolean) {
   // node的type是元素节点
   if (node.type === 1) {
+    // node是staic或者标记了once属性
+    // 是否在v-for里面
     if (node.static || node.once) {
       node.staticInFor = isInFor
     }
@@ -106,12 +112,16 @@ function markStaticRoots (node: ASTNode, isInFor: boolean) {
 }
 
 function isStatic (node: ASTNode): boolean {
+  // node是表达式
   if (node.type === 2) { // expression
     return false
   }
+  // node是文本节点
   if (node.type === 3) { // text
     return true
   }
+  // pre标签返回true 或者
+  // 没有v-bind,@标签，没有v-if，没有v-for，不是template、slot这样内置标签、是原生的标签，不是v-for里面，并且isStaticKey每一项都有
   return !!(node.pre || (
     !node.hasBindings && // no dynamic bindings
     !node.if && !node.for && // not v-if or v-for or v-else

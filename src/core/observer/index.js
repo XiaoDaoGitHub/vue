@@ -250,11 +250,13 @@ export function set (target: Array<any> | Object, key: any, val: any): any {
   ) {
     warn(`Cannot set reactive property on undefined, null, or primitive value: ${(target: any)}`)
   }
+  // array的的话调用splice方法，最后也会调用dep.notify
   if (Array.isArray(target) && isValidArrayIndex(key)) {
     target.length = Math.max(target.length, key)
     target.splice(key, 1, val)
     return val
   }
+  // 如果是以存在的key，则直接赋值
   if (key in target && !(key in Object.prototype)) {
     target[key] = val
     return val
@@ -267,11 +269,14 @@ export function set (target: Array<any> | Object, key: any, val: any): any {
     )
     return val
   }
+  // 没有ob，则说明target是一个普通对象
   if (!ob) {
     target[key] = val
     return val
   }
+  // 新赋的值也定义为响应式的
   defineReactive(ob.value, key, val)
+  // 调用dep的notify方法通知每一个订阅者更新
   ob.dep.notify()
   return val
 }

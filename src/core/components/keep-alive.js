@@ -61,7 +61,9 @@ export default {
   },
 
   created () {
+    // cache用来缓存组件
     this.cache = Object.create(null)
+    // keys用来缓存组件的标识，当超过max时，会删除第一个，遵循LRU策略
     this.keys = []
   },
 
@@ -81,34 +83,41 @@ export default {
   },
 
   render () {
+    // slot default存放的是keep-alive里面的子节点
     const slot = this.$slots.default
+    // 获取第一个组件节点
     const vnode: VNode = getFirstComponentChild(slot)
+    // 获取组件的options
     const componentOptions: ?VNodeComponentOptions = vnode && vnode.componentOptions
     if (componentOptions) {
-      // check pattern
+      // 获取组件的名称
       const name: ?string = getComponentName(componentOptions)
+      // 
       const { include, exclude } = this
       if (
-        // not included
+        // not included不在include里面
         (include && (!name || !matches(include, name))) ||
-        // excluded
+        // 或者在excluede里面
         (exclude && name && matches(exclude, name))
       ) {
         return vnode
       }
-
+      // 获取缓存和keys
       const { cache, keys } = this
       const key: ?string = vnode.key == null
         // same constructor may get registered as different local components
         // so cid alone is not enough (#3269)
         ? componentOptions.Ctor.cid + (componentOptions.tag ? `::${componentOptions.tag}` : '')
         : vnode.key
+      // 已经缓存过，直接返回yi'h
       if (cache[key]) {
         vnode.componentInstance = cache[key].componentInstance
         // make current key freshest
+        // 调整keys的顺序
         remove(keys, key)
         keys.push(key)
       } else {
+        // 新增缓存
         cache[key] = vnode
         keys.push(key)
         // prune oldest entry

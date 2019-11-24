@@ -58,6 +58,7 @@ export default class Watcher {
     if (options) {
       this.deep = !!options.deep
       this.user = !!options.user
+      // 计算属性这个值是true
       this.lazy = !!options.lazy
       this.sync = !!options.sync
       this.before = options.before
@@ -90,7 +91,7 @@ export default class Watcher {
         )
       }
     }
-    // 普通组件会手动调用一次 get 函数
+    // 普通组件会手动调用一次 get 函数，而计算属性则是在调用的时候再求值
     this.value = this.lazy
       ? undefined
       : this.get()
@@ -122,6 +123,9 @@ export default class Watcher {
         traverse(value)
       }
       popTarget()
+      // 渲染期间会重新的手机订阅队列，
+      // 而有些数据前一次需要而后一次不在需要
+      // 此时需要把这些数据的订阅者中除去Wathcer
       this.cleanupDeps()
     }
     return value
@@ -150,6 +154,7 @@ export default class Watcher {
     let i = this.deps.length
     while (i--) {
       const dep = this.deps[i]
+      // 当前的依赖中不存在之前的依赖，需要把dep的Sub中移除当前Watcher
       if (!this.newDepIds.has(dep.id)) {
         dep.removeSub(this)
       }
@@ -168,7 +173,7 @@ export default class Watcher {
    * Subscriber interface.
    * Will be called when a dependency changes.
    */
-  update () {
+  update () { 
     /* istanbul ignore else */
     if (this.lazy) {
       this.dirty = true
@@ -217,7 +222,9 @@ export default class Watcher {
    * This only gets called for lazy watchers.
    */
   evaluate () {
+    // 调用get函数
     this.value = this.get()
+    // 设置dirty为false
     this.dirty = false
   }
 
