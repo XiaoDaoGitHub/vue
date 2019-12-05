@@ -44,12 +44,14 @@ export function extractTransitionData (comp: Component): Object {
   const data = {}
   const options: ComponentOptions = comp.$options
   // props
+  // 获取transition的熟悉
   for (const key in options.propsData) {
     data[key] = comp[key]
   }
   // events.
   // extract listeners and pass them directly to the transition methods
   const listeners: ?Object = options._parentListeners
+  // 获取transiton的事件
   for (const key in listeners) {
     data[camelize(key)] = listeners[key]
   }
@@ -83,17 +85,22 @@ const isVShowDirective = d => d.name === 'show'
 export default {
   name: 'transition',
   props: transitionProps,
+  // transition和keep-alive一样都是抽象组件
   abstract: true,
 
   render (h: Function) {
+    // 获取子节点
     let children: any = this.$slots.default
+    // 
     if (!children) {
       return
     }
 
     // filter out text nodes (possible whitespaces)
+    // 不能是文本节点
     children = children.filter(isNotTextNode)
     /* istanbul ignore if */
+    // 没有子节点的话直接返回
     if (!children.length) {
       return
     }
@@ -118,17 +125,19 @@ export default {
         this.$parent
       )
     }
-
+    // 获取第一个子节点
     const rawChild: VNode = children[0]
 
     // if this is a component root node and the component's
     // parent container node also has transition, skip.
+    // 看当前节点的父节点是否也是transition节点，是的话返回rawChild
     if (hasParentTransition(this.$vnode)) {
       return rawChild
     }
 
     // apply transition data to child
     // use getRealChild() to ignore abstract components e.g. keep-alive
+    // 子节点不能是抽象节点，获取真实的vnode节点
     const child: ?VNode = getRealChild(rawChild)
     /* istanbul ignore if */
     if (!child) {
@@ -142,7 +151,9 @@ export default {
     // ensure a key that is unique to the vnode type and to this transition
     // component instance. This key will be used to remove pending leaving nodes
     // during entering.
+    // 构建id
     const id: string = `__transition-${this._uid}-`
+    // 设置子节点的key
     child.key = child.key == null
       ? child.isComment
         ? id + 'comment'
@@ -150,29 +161,38 @@ export default {
       : isPrimitive(child.key)
         ? (String(child.key).indexOf(id) === 0 ? child.key : id + child.key)
         : child.key
-
+    // 提取transition的属性和事件
     const data: Object = (child.data || (child.data = {})).transition = extractTransitionData(this)
+    // 获取上一次渲染的vnode
     const oldRawChild: VNode = this._vnode
+    // 获取上一次渲染的真实节点
     const oldChild: VNode = getRealChild(oldRawChild)
 
     // mark v-show
     // so that the transition module can hand over the control to the directive
+    // transition子节点是否有v-show指令
     if (child.data.directives && child.data.directives.some(isVShowDirective)) {
+      // 标记data.show = true
       child.data.show = true
     }
 
     if (
       oldChild &&
       oldChild.data &&
+      // 新旧vnode不是相同类型的vnode
       !isSameChild(child, oldChild) &&
+      // oldChild不是异步占位符节点
       !isAsyncPlaceholder(oldChild) &&
       // #6687 component root is a comment node
+      // oldChild不是一个注释节点
       !(oldChild.componentInstance && oldChild.componentInstance._vnode.isComment)
     ) {
       // replace old child transition data with fresh one
       // important for dynamic transitions!
+      // 继承child的属性和事件
       const oldData: Object = oldChild.data.transition = extend({}, data)
       // handle transition mode
+      // 是否是out-in模式(老元素先过渡，新元素后过渡)
       if (mode === 'out-in') {
         // return placeholder node and queue update when leave finishes
         this._leaving = true

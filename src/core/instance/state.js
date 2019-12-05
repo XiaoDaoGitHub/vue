@@ -191,7 +191,9 @@ function initComputed (vm: Component, computed: Object) {
   const isSSR = isServerRendering()
 
   for (const key in computed) {
+    // 获取每一个computed属性
     const userDef = computed[key]
+    // computed可以是函数也可以是拥有get属性的对象
     const getter = typeof userDef === 'function' ? userDef : userDef.get
     if (process.env.NODE_ENV !== 'production' && getter == null) {
       warn(
@@ -213,6 +215,7 @@ function initComputed (vm: Component, computed: Object) {
     // component-defined computed properties are already defined on the
     // component prototype. We only need to define computed properties defined
     // at instantiation here.
+    // 计算属性不能和data或props同名
     if (!(key in vm)) {
       defineComputed(vm, key, userDef)
     } else if (process.env.NODE_ENV !== 'production') {
@@ -231,11 +234,13 @@ export function defineComputed (
   userDef: Object | Function
 ) {
   const shouldCache = !isServerRendering()
+  // 计算属性时函数
   if (typeof userDef === 'function') {
     sharedPropertyDefinition.get = shouldCache
       ? createComputedGetter(key)
       : createGetterInvoker(userDef)
     sharedPropertyDefinition.set = noop
+    // 计算属性是拥有get属性的对象
   } else {
     sharedPropertyDefinition.get = userDef.get
       ? shouldCache && userDef.cache !== false
@@ -260,12 +265,13 @@ function createComputedGetter (key) {
   return function computedGetter () {
     const watcher = this._computedWatchers && this._computedWatchers[key]
     if (watcher) {
+      // 计算属性的第一次计算是在引用它的时候
       if (watcher.dirty) {
         watcher.evaluate()
       }
-      // 计算属性时多个值共同的结果
-      // 所以
+      // 计算属性是多个值共同的结果
       if (Dep.target) {
+        // 计算属性的每一个依赖都添加当前的Watcher对象
         watcher.depend()
       }
       return watcher.value
@@ -333,6 +339,7 @@ function createWatcher (
     options = handler
     handler = handler.handler
   }
+  // handler是字符串子表示是已存在的熟悉
   if (typeof handler === 'string') {
     handler = vm[handler]
   }

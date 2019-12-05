@@ -40,10 +40,12 @@ const componentVNodeHooks = {
     if (
       vnode.componentInstance &&
       !vnode.componentInstance._isDestroyed &&
+      // keep-alive包裹的组件会设置keepAlive=true
       vnode.data.keepAlive
     ) {
       // kept-alive components, treat as a patch
       const mountedNode: any = vnode // work around flow
+      // 第二次直接执行prepatch，避免重新创建子节点
       componentVNodeHooks.prepatch(mountedNode, mountedNode)
     } else {
       // 这里会调用在createComponent中调用Vue.entend创建的子构造函数

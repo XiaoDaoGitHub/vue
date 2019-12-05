@@ -11,9 +11,12 @@ export function resolveTransition (def?: string | Object): ?Object {
   /* istanbul ignore else */
   if (typeof def === 'object') {
     const res = {}
+    // 是否定义了css===false属性，该属性会跳过css过渡
     if (def.css !== false) {
+      // 根据name扩展各种css类名
       extend(res, autoCssTransition(def.name || 'v'))
     }
+    // 继承def的属性
     extend(res, def)
     return res
   } else if (typeof def === 'string') {
@@ -92,8 +95,10 @@ export function whenTransitionEnds (
 ) {
   const { type, timeout, propCount } = getTransitionInfo(el, expectedType)
   if (!type) return cb()
+  // 获取事件类型
   const event: string = type === TRANSITION ? transitionEndEvent : animationEndEvent
   let ended = 0
+  // 动画结束，移除监听事件，并执行后续回调函数
   const end = () => {
     el.removeEventListener(event, onEnd)
     cb()
@@ -110,6 +115,7 @@ export function whenTransitionEnds (
       end()
     }
   }, timeout + 1)
+  // 添加动画完成事件
   el.addEventListener(event, onEnd)
 }
 

@@ -39,7 +39,7 @@ export function initLifecycle (vm: Component) {
   // 这些组件并不能成为父组件，被当成虚拟组件使用。
   let parent = options.parent
   if (parent && !options.abstract) {
-    // 一直寻找abstract不为true的组件，也就是真实组件
+    // 抽象组件不会存储父子关系，也就是真实组件
     while (parent.$options.abstract && parent.$parent) {
       parent = parent.$parent
     }
