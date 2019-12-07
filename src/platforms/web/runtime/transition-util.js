@@ -127,6 +127,7 @@ export function getTransitionInfo (el: Element, expectedType?: ?string): {
   timeout: number;
   hasTransform: boolean;
 } {
+  // 获取css样式
   const styles: any = window.getComputedStyle(el)
   // JSDOM may return undefined for transition properties
   const transitionDelays: Array<string> = (styles[transitionProp + 'Delay'] || '').split(', ')
